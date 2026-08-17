@@ -1,0 +1,11 @@
+# Compilados de Java
+bin/
+*.class
+
+# Archivos temporales de Word
+~$*.docx
+
+# Sistema operativo
+Thumbs.db
+desktop.ini
+.DS_Store
