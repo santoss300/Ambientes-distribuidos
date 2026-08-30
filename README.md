@@ -7,6 +7,8 @@ remotas comunicándose mediante **sockets TCP** (`java.net`).
 **Tema:** Arquitectura Cliente-Servidor y Comunicación mediante Sockets TCP
 
 > El análisis teórico completo (Ejercicio 2) está en **[INFORME.md](INFORME.md)**.
+> El Trabajo Práctico N° 2 —reintentos con backoff exponencial, jitter y
+> métricas de resiliencia— está en la carpeta **[TP2/](TP2/)**.
 
 ---
 
@@ -18,6 +20,10 @@ remotas comunicándose mediante **sockets TCP** (`java.net`).
 │   ├── Servidor.java     Servidor TCP secuencial, escucha en el puerto 5500
 │   └── Cliente.java      Cliente de consola, host y puerto parametrizables
 ├── capturas/             Capturas de pantalla de la ejecución
+├── TP2/                  Trabajo Práctico N° 2 — resiliencia y reintentos
+│   ├── src/              ClienteResiliente.java y ServidorInestable.java
+│   ├── capturas/         Salidas reales de las ejecuciones
+│   └── README.md         Consignas 1, 2 y 3 del TP2
 ├── INFORME.md            Ejercicio 2 — análisis teórico-práctico
 └── README.md             Este archivo
 ```
@@ -177,6 +183,16 @@ Connection refused: connect`, lanzada por el constructor de `Socket`.
 
 ---
 
+## Trabajo Práctico N° 2
+
+La segunda entrega —**cliente resiliente** con reintentos, backoff exponencial
+con jitter y métricas— está en la carpeta [TP2/](TP2/), con su propio README que
+incluye la implementación, las capturas y el análisis teórico sobre el
+*Thundering Herd Problem* y la diferencia entre fallos transitorios y
+permanentes.
+
+---
+
 ## Autor
 
-Trabajo Práctico N° 1 — Desarrollo de Aplicaciones para Ambientes Distribuidos
+Trabajos Prácticos N° 1 y N° 2 — Desarrollo de Aplicaciones para Ambientes Distribuidos

@@ -1,0 +1,48 @@
+=================================================
+  CLIENTE RESILIENTE - CALCULADORA DISTRIBUIDA
+=================================================
+Servidor destino : 127.0.0.1:5500
+Peticion         : "15;+;30"
+Politica         : backoff exponencial + jitter
+                   espera = 1000 * 2^(intento-1) + Random(0, 500) ms
+Maximo de intentos: 5
+
+--- Intento 1 de 5 ---
+    Duracion del intento: 268 ms
+    !! Fallo: java.net.ConnectException: Connection refused: getsockopt
+       backoff = 1000 ms  |  jitter = 27 ms
+    .. Esperando 1027 ms antes de reintentar.
+
+--- Intento 2 de 5 ---
+    Duracion del intento: 25 ms
+    !! Fallo: java.net.ConnectException: Connection refused: getsockopt
+       backoff = 2000 ms  |  jitter = 64 ms
+    .. Esperando 2064 ms antes de reintentar.
+
+--- Intento 3 de 5 ---
+    Duracion del intento: 1 ms
+    !! Fallo: java.net.ConnectException: Connection refused: getsockopt
+       backoff = 4000 ms  |  jitter = 89 ms
+    .. Esperando 4089 ms antes de reintentar.
+
+--- Intento 4 de 5 ---
+    Duracion del intento: 5 ms
+    !! Fallo: java.net.ConnectException: Connection refused: getsockopt
+       backoff = 8000 ms  |  jitter = 488 ms
+    .. Esperando 8488 ms antes de reintentar.
+
+--- Intento 5 de 5 ---
+    Duracion del intento: 67 ms
+    !! Fallo: java.net.ConnectException: Connection refused: getsockopt
+    !! Se agotaron los 5 intentos.
+
+=================================================
+  METRICAS DE RESILIENCIA
+=================================================
+Estado final de la peticion : FALLO DEFINITIVO
+Detalle                     : java.net.ConnectException: Connection refused: getsockopt
+Cantidad de intentos        : 5
+Tiempo total acumulado      : 16329 ms
+  - esperando (backoff)     : 15668 ms
+  - comunicacion efectiva   : 661 ms
+=================================================

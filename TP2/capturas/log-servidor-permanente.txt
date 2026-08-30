@@ -1,0 +1,11 @@
+=================================================
+  SERVIDOR INESTABLE - CALCULADORA DISTRIBUIDA
+=================================================
+Escuchando en el puerto 5500...
+Fallos transitorios a simular: 0
+(Ctrl+C para detener)
+
+[1] Cliente conectado desde 127.0.0.1:51078
+    Peticion recibida: "10;/;0"
+    Respuesta enviada : "ERROR: 400 Division por cero"
+

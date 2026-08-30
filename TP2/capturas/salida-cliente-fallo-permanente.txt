@@ -1,0 +1,25 @@
+=================================================
+  CLIENTE RESILIENTE - CALCULADORA DISTRIBUIDA
+=================================================
+Servidor destino : 127.0.0.1:5500
+Peticion         : "10;/;0"
+Politica         : backoff exponencial + jitter
+                   espera = 1000 * 2^(intento-1) + Random(0, 500) ms
+Maximo de intentos: 5
+
+--- Intento 1 de 5 ---
+    -> Enviando: "10;/;0"
+    Duracion del intento: 153 ms
+    !! Fallo: ERROR: 400 Division por cero
+    !! Es un fallo PERMANENTE: reintentar no tiene sentido.
+
+=================================================
+  METRICAS DE RESILIENCIA
+=================================================
+Estado final de la peticion : FALLO DEFINITIVO
+Detalle                     : ERROR: 400 Division por cero
+Cantidad de intentos        : 1
+Tiempo total acumulado      : 174 ms
+  - esperando (backoff)     : 0 ms
+  - comunicacion efectiva   : 174 ms
+=================================================

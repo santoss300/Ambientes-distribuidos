@@ -1,0 +1,26 @@
+=================================================
+  SERVIDOR INESTABLE - CALCULADORA DISTRIBUIDA
+=================================================
+Escuchando en el puerto 5500...
+Fallos transitorios a simular: 3
+(Ctrl+C para detener)
+
+[1] Cliente conectado desde 127.0.0.1:63681
+    Peticion recibida: "15;+;30"
+    >> SOBRECARGA SIMULADA: se rechaza la peticion.
+    Respuesta enviada : "ERROR: 503 Servicio no disponible (fallo transitorio simulado)"
+
+[2] Cliente conectado desde 127.0.0.1:63682
+    Peticion recibida: "15;+;30"
+    >> SOBRECARGA SIMULADA: se rechaza la peticion.
+    Respuesta enviada : "ERROR: 503 Servicio no disponible (fallo transitorio simulado)"
+
+[3] Cliente conectado desde 127.0.0.1:63684
+    Peticion recibida: "15;+;30"
+    >> SOBRECARGA SIMULADA: se rechaza la peticion.
+    Respuesta enviada : "ERROR: 503 Servicio no disponible (fallo transitorio simulado)"
+
+[4] Cliente conectado desde 127.0.0.1:63687
+    Peticion recibida: "15;+;30"
+    Respuesta enviada : "45"
+

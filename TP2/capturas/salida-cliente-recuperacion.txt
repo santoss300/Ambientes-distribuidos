@@ -1,0 +1,45 @@
+=================================================
+  CLIENTE RESILIENTE - CALCULADORA DISTRIBUIDA
+=================================================
+Servidor destino : 127.0.0.1:5500
+Peticion         : "15;+;30"
+Politica         : backoff exponencial + jitter
+                   espera = 1000 * 2^(intento-1) + Random(0, 500) ms
+Maximo de intentos: 5
+
+--- Intento 1 de 5 ---
+    -> Enviando: "15;+;30"
+    Duracion del intento: 526 ms
+    !! Fallo: ERROR: 503 Servicio no disponible (fallo transitorio simulado)
+       backoff = 1000 ms  |  jitter = 60 ms
+    .. Esperando 1060 ms antes de reintentar.
+
+--- Intento 2 de 5 ---
+    -> Enviando: "15;+;30"
+    Duracion del intento: 3 ms
+    !! Fallo: ERROR: 503 Servicio no disponible (fallo transitorio simulado)
+       backoff = 2000 ms  |  jitter = 218 ms
+    .. Esperando 2218 ms antes de reintentar.
+
+--- Intento 3 de 5 ---
+    -> Enviando: "15;+;30"
+    Duracion del intento: 4 ms
+    !! Fallo: ERROR: 503 Servicio no disponible (fallo transitorio simulado)
+       backoff = 4000 ms  |  jitter = 309 ms
+    .. Esperando 4309 ms antes de reintentar.
+
+--- Intento 4 de 5 ---
+    -> Enviando: "15;+;30"
+    Duracion del intento: 6 ms
+    <- RESULTADO: 45
+
+=================================================
+  METRICAS DE RESILIENCIA
+=================================================
+Estado final de la peticion : EXITO
+Detalle                     : 45
+Cantidad de intentos        : 4
+Tiempo total acumulado      : 8180 ms
+  - esperando (backoff)     : 7587 ms
+  - comunicacion efectiva   : 593 ms
+=================================================
