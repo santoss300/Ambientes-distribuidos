@@ -1,0 +1,18 @@
+=================================================
+  CLIENTE DE CHAT (TCP)
+=================================================
+Conectando a 127.0.0.1:5000...
+Conectado.
+
+Bienvenido al chat. Escriba su nombre:
+> Bruno
+Hola Bruno! Hay 2 usuario(s) conectado(s). Escriba /salir para irse.
+*** Carla se unio al chat ***
+[Ana] Hola a todos!
+> Hola Ana, como va?
+[Carla] Buenas! Somos 3 conectados al mismo tiempo
+[Ana] Bien, probando el TP3
+> Me voy, chau!
+> /salir
+Saliste del chat.
+Conexion cerrada.

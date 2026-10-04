@@ -1,62 +1,49 @@
 # Informe — Trabajo Práctico N° 1
 
 **Materia:** Desarrollo de Aplicaciones para Ambientes Distribuidos
-**Tema:** Arquitectura Cliente-Servidor y Comunicación mediante Sockets TCP
+**Tema:** Cliente-Servidor con Sockets TCP
 
 ---
 
-## Ejercicio 1 — Calculadora Distribuida Simple
+## Ejercicio 1 — Calculadora distribuida
 
-### Arquitectura implementada
+### Cómo funciona
 
 ```
-   ┌──────────────────┐                              ┌──────────────────┐
-   │     CLIENTE      │                              │     SERVIDOR     │
-   │  (Cliente.java)  │                              │ (Servidor.java)  │
-   ├──────────────────┤                              ├──────────────────┤
-   │ 1. pide datos    │                              │ ServerSocket(5500)│
-   │    por consola   │                              │        │          │
-   │ 2. arma la       │                              │   accept()  ◄── BLOQUEA
-   │    cadena        │      "15;+;30"               │        │          │
-   │ 3. new Socket()  │ ───────────────────────────► │   readLine()◄── BLOQUEA
-   │ 4. println()     │                              │        │          │
-   │ 5. readLine() ◄── BLOQUEA                       │   procesar()      │
-   │                  │           "45"               │        │          │
-   │ 6. imprime       │ ◄─────────────────────────── │   println()       │
-   │ 7. close()       │                              │   close()         │
-   └──────────────────┘                              └──────────────────┘
-                              red TCP/IP
+   CLIENTE                                   SERVIDOR (puerto 5500)
+   1. pide los números por consola
+   2. arma el texto "15;+;30"
+   3. se conecta          ───────────────►   accept()   (estaba esperando)
+   4. manda "15;+;30"     ───────────────►   readLine() (lee el pedido)
+                                             hace la cuenta
+   5. recibe "45"         ◄───────────────   manda "45"
+   6. lo muestra y cierra                    cierra y vuelve a esperar
 ```
 
-### Protocolo de aplicación
+### El "idioma" que usan (protocolo)
 
-Se definió un protocolo de texto plano, de una línea, terminada en salto de línea:
+Se mandan una línea de texto cada uno:
 
-| Sentido | Formato | Ejemplo |
+| Quién | Formato | Ejemplo |
 |---|---|---|
-| Petición (cliente → servidor) | `numero1;operador;numero2` | `15;+;30` |
-| Respuesta OK (servidor → cliente) | el resultado | `45` |
-| Respuesta de error | `ERROR: <descripción>` | `ERROR: Division por cero` |
+| Cliente → Servidor | `numero1;operador;numero2` | `15;+;30` |
+| Servidor → Cliente (bien) | el resultado | `45` |
+| Servidor → Cliente (error) | `ERROR: <qué pasó>` | `ERROR: Division por cero` |
 
-El salto de línea que agrega `println()` es lo que le permite al `readLine()` del
-otro extremo saber dónde termina el mensaje. Sin ese delimitador, TCP —que es un
-flujo de bytes sin fronteras de mensaje— dejaría al receptor bloqueado
-indefinidamente esperando más datos.
+El salto de línea al final es importante: así el que lee sabe dónde termina el
+mensaje.
 
-### Decisiones de diseño
+### Decisiones
 
-- **Servidor secuencial en bucle:** atiende un cliente completo, cierra la
-  conexión y recién entonces vuelve a `accept()`. No usa hilos, tal como permite
-  la consigna.
-- **Una conexión por operación:** cada cálculo abre y cierra su propio socket.
-  Esto deja visible el ciclo de vida completo del socket en cada iteración.
-- **Manejo de errores centralizado en el servidor:** el método `procesar()` nunca
-  propaga excepciones; todo problema se traduce a un mensaje `ERROR: ...`. Así el
-  cliente **siempre** recibe una respuesta y nunca queda colgado en `readLine()`.
+- **El servidor atiende de a un cliente por vez**, sin hilos (lo permite la
+  consigna).
+- **Una conexión por cuenta**: cada operación abre y cierra su propia conexión.
+- **Los errores se mandan como texto**: el servidor nunca "explota", siempre
+  contesta algo. Así el cliente nunca se queda esperando para siempre.
 
 ### División por cero
 
-La consigna pide gestionarla de forma controlada. En `Servidor.java`:
+El servidor revisa **antes** de dividir:
 
 ```java
 case "/":
@@ -66,21 +53,12 @@ case "/":
     return formatear((double) a / b);
 ```
 
-La validación se hace **antes** de dividir. Si se dejara que Java ejecutara `15/0`
-con enteros, se lanzaría una `ArithmeticException` que abortaría el bloque de
-atención, el socket se cerraría sin escribir nada, y el cliente recibiría `null`
-de su `readLine()` en vez de un mensaje útil.
-
-Evidencia de funcionamiento (captura `03-division-por-cero.png`):
-
-```
-  -> Enviando al servidor: "10;/;0"
-  <- El servidor respondio: ERROR: Division por cero
-```
+Si no se revisara, Java tiraría un error, el servidor cortaría la conexión sin
+contestar y el cliente no sabría qué pasó.
 
 ### Casos probados
 
-| Petición enviada | Respuesta del servidor | Resultado |
+| Pedido | Respuesta | Resultado |
 |---|---|---|
 | `15;+;30` | `45` | OK |
 | `100;-;42` | `58` | OK |
@@ -90,233 +68,97 @@ Evidencia de funcionamiento (captura `03-division-por-cero.png`):
 
 ---
 
-## Ejercicio 2 — Análisis Teórico-Práctico
+## Ejercicio 2 — Preguntas
 
-### Pregunta 1 — ¿Qué sucede con el cliente si el servidor no está ejecutándose al momento de intentar conectar? Muestre la excepción que lanza Java.
+### Pregunta 1 — ¿Qué le pasa al cliente si el servidor no está prendido?
 
-El cliente **no se queda esperando**: falla de inmediato, en el momento mismo de
-construir el socket. La línea responsable es:
+Falla **al instante**, en el momento de conectarse:
 
 ```java
-Socket socket = new Socket(host, puerto);   // Cliente.java, línea 90
+Socket socket = new Socket(host, puerto);   // Cliente.java, línea 61
 ```
 
-El constructor de `Socket` intenta el *handshake* TCP de tres vías (envía un
-paquete `SYN` al puerto 5500). Como no hay ningún proceso escuchando en ese
-puerto, el sistema operativo de la máquina destino responde con un paquete
-`RST` (reset), rechazando activamente la conexión. Java traduce ese rechazo a
-la excepción **`java.net.ConnectException`**, con el mensaje
-`Connection refused: connect`.
+Como nadie está escuchando en el puerto 5500, la otra máquina rechaza la
+conexión y Java lanza **`java.net.ConnectException: Connection refused`**.
 
-Jerarquía de la excepción:
-
-```
-java.lang.Exception
-  └─ java.io.IOException
-       └─ java.net.SocketException
-            └─ java.net.ConnectException      ← es una excepción verificada (checked)
-```
-
-Al ser una excepción verificada, el compilador **obliga** a manejarla. Salida
-real capturada (ver `capturas/05-servidor-no-disponible.png`):
+El cliente atrapa ese error y muestra un mensaje claro en vez de un error feo
+(ver `capturas/05-servidor-no-disponible.png`):
 
 ```
   !! NO SE PUDO CONECTAR CON EL SERVIDOR.
      Excepcion: java.net.ConnectException
      Mensaje  : Connection refused: connect
      Verifique que el servidor este ejecutandose en 127.0.0.1:5500
-
-     --- Stack trace completo ---
-java.net.ConnectException: Connection refused: connect
-	at java.base/sun.nio.ch.Net.connect0(Native Method)
-	at java.base/sun.nio.ch.Net.connect(Net.java:589)
-	at java.base/sun.nio.ch.Net.connect(Net.java:578)
-	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:583)
-	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
-	at java.base/java.net.Socket.connect(Socket.java:751)
-	at java.base/java.net.Socket.connect(Socket.java:686)
-	at java.base/java.net.Socket.<init>(Socket.java:555)
-	at java.base/java.net.Socket.<init>(Socket.java:324)
-	at Cliente.enviarPeticion(Cliente.java:90)
-	at Cliente.main(Cliente.java:69)
 ```
 
-En el código, el caso está capturado explícitamente para no mostrarle al usuario
-un volcado crudo:
+Un detalle: si la **máquina** del servidor directamente no existe o está
+apagada, no hay rechazo inmediato. El cliente se queda esperando unos segundos
+y después falla por tiempo (timeout).
 
-```java
-} catch (ConnectException e) {
-    System.out.println("  !! NO SE PUDO CONECTAR CON EL SERVIDOR.");
-    ...
-}
-```
+### Pregunta 2 — ¿Qué línea frena el programa hasta que pasa algo en la red?
 
-**Observación importante:** hay que distinguir dos escenarios distintos.
+Hay tres líneas que se quedan esperando:
 
-- *Servidor apagado, host alcanzable* → `ConnectException` inmediata
-  (el host contesta con `RST`). Es el caso probado.
-- *Host inexistente o inalcanzable* (por ejemplo, una IP apagada de la red) →
-  no llega ninguna respuesta y el intento queda reintentando hasta agotar el
-  temporizador del sistema operativo, terminando en
-  `java.net.SocketTimeoutException` o `java.net.NoRouteToHostException` tras
-  varios segundos.
+| Archivo | Línea | Instrucción | Sigue cuando... |
+|---|---|---|---|
+| `Servidor.java` | 33 | `servidor.accept()` | se conecta un cliente |
+| `Servidor.java` | 45 | `entrada.readLine()` | el cliente manda su pedido |
+| `Cliente.java` | 68 | `entrada.readLine()` | llega la respuesta del servidor |
 
-### Pregunta 2 — Identifique en su código qué línea bloquea la ejecución del programa hasta que ocurre un evento de red.
+La más importante es **`accept()`**: el servidor se queda ahí parado, sin
+límite de tiempo, hasta que alguien se conecta.
 
-Hay **tres** llamadas bloqueantes, marcadas con comentarios en el código fuente:
+Mientras espera, el programa **no gasta procesador**: queda "dormido" y el
+sistema operativo lo despierta cuando llega algo por la red.
 
-| # | Archivo | Línea | Instrucción | Se desbloquea cuando... |
-|---|---|---|---|---|
-| 1 | `Servidor.java` | 58 | `Socket conexion = servidor.accept();` | un cliente completa el handshake TCP contra el puerto 5500 |
-| 2 | `Servidor.java` | 79 | `String peticion = entrada.readLine();` | llega una línea completa desde el cliente (o este cierra la conexión) |
-| 3 | `Cliente.java` | 105 | `String resultado = entrada.readLine();` | llega la línea de respuesta desde el servidor |
+Como el servidor atiende de a uno, si está esperando al cliente A, el cliente B
+tiene que hacer cola. Eso se resuelve con hilos (se hace en el TP3).
 
-**La más representativa es `accept()`**, porque es la que define el rol de
-servidor: el proceso queda detenido indefinidamente, sin fecha de vencimiento,
-esperando que aparezca alguien del otro lado.
+### Pregunta 3 — ¿Qué hay que cambiar para usarlo entre dos notebooks en el Wi-Fi del aula?
 
-Un punto conceptual que conviene remarcar: durante el bloqueo **el programa no
-consume CPU**. No es una espera activa (un `while` girando en vacío); el sistema
-operativo saca al hilo de la cola de ejecución y lo deja dormido hasta que la
-tarjeta de red genera el evento correspondiente. Recién ahí el planificador lo
-vuelve a poner en ejecución.
+**El código no hace falta cambiarlo**, porque al cliente ya se le puede pasar
+la IP del servidor. Los pasos son:
 
-Esta es justamente la diferencia con una llamada a función local: una función
-local retorna cuando termina de calcular, y ese momento depende únicamente de
-este proceso. Estas tres líneas retornan cuando ocurre algo **fuera** del
-proceso, sobre lo que el programa no tiene ningún control.
+1. **Ver la IP de la notebook servidor** con `ipconfig` (Windows). Ejemplo:
+   `192.168.0.142`.
+2. **Correr el cliente apuntando a esa IP** (no a `127.0.0.1`, que es "esta
+   misma compu"):
+   ```bash
+   java -cp bin Cliente 192.168.0.142 5500
+   ```
+3. **Abrir el puerto 5500 en el firewall** de la notebook servidor. Es el
+   problema más común. En PowerShell como administrador:
+   ```powershell
+   New-NetFirewallRule -DisplayName "TP1 Calculadora" -Direction Inbound -Protocol TCP -LocalPort 5500 -Action Allow
+   ```
+   O aceptar el cartel de Windows "Permitir acceso" la primera vez que se
+   corre el servidor.
+4. **Estar en la misma red.** Algunas redes Wi-Fi (como las de facultades)
+   bloquean que los dispositivos se hablen entre sí. Si pasa eso, se puede usar
+   el hotspot de un celular.
+5. **Probar la conexión** antes de culpar al código:
+   ```powershell
+   ping 192.168.0.142
+   Test-NetConnection 192.168.0.142 -Port 5500
+   ```
 
-Consecuencia directa del diseño secuencial: mientras el servidor está bloqueado
-en el `readLine()` de la línea 79 atendiendo al cliente A, un cliente B que
-intente conectarse queda encolado en el *backlog* de TCP y no será atendido
-hasta que A termine. Ese es exactamente el problema que resolverían los hilos.
+El servidor no hay que tocarlo: `new ServerSocket(5500)` ya acepta conexiones
+desde cualquier red de la máquina, incluida la Wi-Fi.
 
-### Pregunta 3 — Proponga qué cambios serían necesarios si dos compañeros quisieran ejecutar el Cliente en una notebook y el Servidor en otra, conectadas al Wi-Fi del aula.
-
-**El código ya está preparado para esto**: el host es un parámetro de línea de
-comandos, no una constante incrustada.
-
-```java
-String host = args.length > 0 ? args[0] : HOST_POR_DEFECTO;  // Cliente.java
-```
-
-Los cambios necesarios son los siguientes.
-
-**1. Averiguar la IP de la notebook servidora en la red del aula.**
-
-```bash
-ipconfig          # Windows  -> buscar "Dirección IPv4" del adaptador Wi-Fi
-ip addr           # Linux
-ifconfig          # macOS
-```
-
-En la máquina donde se desarrolló este TP, por ejemplo, el adaptador Wi-Fi
-tiene la dirección `192.168.0.142`.
-
-**2. Cambiar el destino del cliente: dejar de usar `localhost`.**
-
-Esto es lo esencial. `127.0.0.1` (o `localhost`) es la interfaz de *loopback*:
-el tráfico nunca sale de la máquina. Hay que apuntar a la IP real del servidor
-en la LAN:
-
-```bash
-# En la notebook cliente:
-java -cp bin Cliente 192.168.0.142 5500
-```
-
-Sin recompilar nada, gracias a que el host es parametrizable.
-
-**3. Verificar que el servidor escuche en todas las interfaces.**
-
-`new ServerSocket(5500)` ya hace *bind* a `0.0.0.0`, es decir, a **todas** las
-interfaces de red de la máquina, incluida la Wi-Fi. Por lo tanto no hace falta
-cambiar nada. El error a evitar sería haber escrito:
-
-```java
-// INCORRECTO para uso en red: solo aceptaría conexiones de la propia máquina
-new ServerSocket(5500, 50, InetAddress.getByName("127.0.0.1"));
-```
-
-**4. Abrir el puerto 5500 en el firewall de la notebook servidora.**
-
-Este es, en la práctica, el motivo número uno por el que el TP "no funciona" en
-el aula. Windows Defender bloquea por defecto las conexiones entrantes hacia la
-JVM. Desde una consola con privilegios de administrador:
-
-```powershell
-New-NetFirewallRule -DisplayName "TP1 Calculadora Distribuida" `
-                    -Direction Inbound -Protocol TCP -LocalPort 5500 -Action Allow
-```
-
-Alternativamente, aceptar el cuadro de diálogo "Permitir el acceso" que Windows
-muestra la primera vez que se ejecuta el servidor, **marcando la casilla de
-redes privadas**.
-
-**5. Comprobar que ambas notebooks estén en la misma subred y que la red lo permita.**
-
-- Las dos IPs deben pertenecer al mismo rango (por ejemplo, ambas `192.168.0.x`).
-- Muchas redes Wi-Fi institucionales tienen activado el *aislamiento de clientes*
-  (**AP isolation**), que impide el tráfico directo entre dispositivos conectados
-  al mismo punto de acceso. Si ese es el caso, ninguna configuración del lado de
-  Java lo resuelve: hay que pedir que se desactive, o bien recurrir a una red
-  alternativa (un teléfono compartiendo datos, o un cable de red entre ambas
-  máquinas).
-- Prueba rápida de conectividad antes de culpar al código:
-
-  ```bash
-  ping 192.168.0.142                       # ¿se alcanza el host?
-  Test-NetConnection 192.168.0.142 -Port 5500   # ¿está abierto el puerto? (PowerShell)
-  ```
-
-**6. Consideraciones adicionales que aparecen al salir de `localhost`.**
-
-- **La latencia deja de ser despreciable.** En loopback la respuesta es
-  prácticamente instantánea; sobre Wi-Fi hay milisegundos de por medio y, lo más
-  importante, **la conexión ahora puede cortarse en el medio de una operación**.
-  Convendría fijar un tiempo máximo de espera para no bloquear el cliente para
-  siempre:
-
-  ```java
-  socket.setSoTimeout(5000);   // lanza SocketTimeoutException a los 5 segundos
-  ```
-
-- **La codificación de caracteres deja de estar garantizada.** Si las dos
-  máquinas usan configuraciones regionales distintas, el `InputStreamReader`
-  interpretaría los bytes con juegos de caracteres diferentes. Lo correcto es
-  fijarla explícitamente en ambos extremos:
-
-  ```java
-  new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8)
-  ```
-
-- **Un solo cliente por vez.** Con el servidor secuencial, si varios compañeros
-  se conectan simultáneamente quedan encolados. Para un aula entera, el paso
-  siguiente sería atender cada conexión en su propio hilo.
-
-**Resumen: qué cambia y qué no.**
-
-| Componente | ¿Requiere cambios? |
+| ¿Qué cambia? | |
 |---|---|
-| Código del servidor | No — ya hace *bind* a todas las interfaces |
-| Código del cliente | No — el host ya es parametrizable |
-| Invocación del cliente | **Sí** — pasar la IP del servidor como argumento |
-| Firewall del servidor | **Sí** — habilitar el puerto 5500 entrante |
-| Red del aula | Verificar subred común y ausencia de *AP isolation* |
+| Código del servidor | Nada |
+| Código del cliente | Nada |
+| Cómo se ejecuta el cliente | Pasarle la IP del servidor |
+| Firewall del servidor | Abrir el puerto 5500 |
 
 ---
 
-## Conclusiones
+## Conclusión
 
-El ejercicio deja en evidencia las tres diferencias de fondo entre invocar una
-función local e invocar un servicio remoto:
+Llamar a algo por la red no es como llamar a una función común:
 
-1. **Hay que serializar.** No se pueden pasar variables; hay que traducirlas a un
-   formato transmisible y acordar de antemano cómo interpretarlo. Ese acuerdo es
-   el protocolo, y en este TP es la cadena `numero1;operador;numero2`.
-2. **Hay que esperar.** Aparecen puntos de bloqueo (`accept()`, `readLine()`) en
-   los que el programa cede el control y queda a merced de un evento externo.
-3. **Puede fallar de maneras nuevas.** Una llamada local no puede "no encontrar
-   al servidor" ni "perder la conexión". Por eso el manejo de errores deja de ser
-   un detalle y pasa a ser parte del diseño: tanto la `ConnectException` del
-   cliente como el mensaje `ERROR: Division por cero` del servidor son
-   respuestas previstas, no accidentes.
+1. **Hay que acordar un formato** para mandar los datos (`numero1;operador;numero2`).
+2. **Hay que esperar** a que el otro conteste (`accept()`, `readLine()`).
+3. **Pueden pasar errores nuevos**: que el servidor no esté o que se corte la
+   conexión. Por eso hay que prever esos casos desde el principio.

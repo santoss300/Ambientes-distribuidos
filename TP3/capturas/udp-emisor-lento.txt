@@ -1,0 +1,12 @@
+=================================================
+  EMISOR DE ALERTAS (UDP)
+=================================================
+Destino   : 127.0.0.1:6000
+Intervalo : 7000 ms
+Cantidad  : 3
+
+[16:20:59] Enviado: ALERTA #1 | CRITICO | temperatura=76C
+[16:21:06] Enviado: ALERTA #2 | WARN | temperatura=51C
+[16:21:13] Enviado: ALERTA #3 | INFO | temperatura=82C
+
+Emisor finalizado.

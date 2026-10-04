@@ -1,0 +1,18 @@
+=================================================
+  RECEPTOR DE ALERTAS Y TELEMETRIA (UDP)
+=================================================
+Escuchando en el puerto 6000...
+Timeout de espera: 5000 ms
+(Ctrl+C para detener)
+
+[16:20:41] Recibido de 127.0.0.1:63871 -> ALERTA #1 | CRITICO | temperatura=69C
+[16:20:43] Recibido de 127.0.0.1:63871 -> ALERTA #2 | INFO | temperatura=86C
+[16:20:45] Recibido de 127.0.0.1:63871 -> ALERTA #3 | WARN | temperatura=89C
+[16:20:47] Recibido de 127.0.0.1:63871 -> ALERTA #4 | CRITICO | temperatura=60C
+[16:20:52] ADVERTENCIA: no llego ningun datagrama en 5 s (timeout #1). Sigo escuchando...
+[16:20:57] ADVERTENCIA: no llego ningun datagrama en 5 s (timeout #2). Sigo escuchando...
+[16:20:59] Recibido de 127.0.0.1:58490 -> ALERTA #1 | CRITICO | temperatura=76C
+[16:21:04] ADVERTENCIA: no llego ningun datagrama en 5 s (timeout #3). Sigo escuchando...
+[16:21:06] Recibido de 127.0.0.1:58490 -> ALERTA #2 | WARN | temperatura=51C
+[16:21:11] ADVERTENCIA: no llego ningun datagrama en 5 s (timeout #4). Sigo escuchando...
+[16:21:13] Recibido de 127.0.0.1:58490 -> ALERTA #3 | INFO | temperatura=82C

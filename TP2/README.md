@@ -1,72 +1,61 @@
-# TP2 — Resiliencia: Reintentos con Backoff Exponencial y Jitter
+# TP2 — Reintentos con espera creciente y Jitter
 
 Trabajo Práctico N° 2 — Desarrollo de Aplicaciones para Ambientes Distribuidos.
 
-Continuación de la calculadora distribuida del [TP1](../README.md). Acá el foco
-ya no es la comunicación en sí, sino **qué hace el cliente cuando el servidor
-falla**: cuántas veces reintenta, cuánto espera entre reintentos y cómo mide su
-propio comportamiento.
+Sigue la calculadora del [TP1](../README.md). Ahora la pregunta es: **¿qué hace
+el cliente cuando el servidor falla?** Lo vuelve a intentar, esperando cada vez
+un poco más, y al final muestra cuánto tardó.
 
 ---
 
-## Contenido
+## Archivos
 
 ```
 TP2/
 ├── src/
-│   ├── ClienteResiliente.java   Cliente con backoff exponencial + jitter y métricas
-│   └── ServidorInestable.java   Servidor que simula fallos transitorios (503)
-├── capturas/                    Salidas reales de las ejecuciones (PNG + TXT)
-└── README.md                    Este archivo (incluye el Ejercicio 3)
+│   ├── ClienteResiliente.java   Cliente que reintenta si algo falla
+│   └── ServidorInestable.java   Servidor que falla a propósito las primeras veces
+├── capturas/                    Capturas y salidas reales de las pruebas
+└── README.md                    Este archivo
 ```
 
 ---
 
-## Compilación y ejecución
+## Cómo compilar y ejecutar
 
 ```bash
 # desde la raíz del repositorio
 javac -d TP2/bin TP2/src/ServidorInestable.java TP2/src/ClienteResiliente.java
 ```
 
-Se necesitan **dos terminales**.
-
-### Terminal A — servidor inestable
+**Terminal A — servidor:**
 
 ```bash
-java -cp TP2/bin ServidorInestable [cantidadDeFallosASimular]
+java -cp TP2/bin ServidorInestable 3   # falla las 3 primeras veces, después anda
+java -cp TP2/bin ServidorInestable 0   # no falla nunca
 ```
 
-El argumento indica cuántas de las primeras peticiones se rechazan con un fallo
-transitorio simulado. Por defecto, `3`.
+**Terminal B — cliente:**
 
 ```bash
-java -cp TP2/bin ServidorInestable 3   # rechaza las 3 primeras, después responde bien
-java -cp TP2/bin ServidorInestable 0   # servidor sano, sin fallos simulados
-```
+java -cp TP2/bin ClienteResiliente [host] [puerto] [pedido]
 
-### Terminal B — cliente resiliente
-
-```bash
-java -cp TP2/bin ClienteResiliente [host] [puerto] [peticion]
-
-# ejemplos
 java -cp TP2/bin ClienteResiliente
-java -cp TP2/bin ClienteResiliente 127.0.0.1 5500 "15;+;30"
 java -cp TP2/bin ClienteResiliente 127.0.0.1 5500 "10;/;0"
 ```
 
 ---
 
-## Ejercicio 1 — Incorporación de Jitter
+## Ejercicio 1 — Jitter
 
-La espera entre reintentos deja de ser un intervalo fijo y pasa a ser:
+Entre intento e intento, el cliente espera:
 
 ```
-Espera = (Base × 2^(intento-1)) + Random(0, 500) ms
+Espera = 1000 × 2^(intento-1) + un número al azar entre 0 y 500 ms
 ```
 
-con `Base = 1000 ms`. Implementación (`ClienteResiliente.java`):
+La primera parte hace que la espera **se duplique** cada vez. La parte al azar
+(el **jitter**) hace que no todos los clientes esperen exactamente lo mismo.
 
 ```java
 private static long calcularEspera(int intento) {
@@ -76,233 +65,141 @@ private static long calcularEspera(int intento) {
 }
 ```
 
-Progresión resultante (el componente aleatorio cambia en cada ejecución):
-
-| Intento | Backoff determinista | Jitter | Espera total |
+| Intento | Espera fija | Al azar | Total |
 |---|---|---|---|
 | 1 → 2 | 1000 ms | 0 – 500 ms | 1000 – 1500 ms |
 | 2 → 3 | 2000 ms | 0 – 500 ms | 2000 – 2500 ms |
 | 3 → 4 | 4000 ms | 0 – 500 ms | 4000 – 4500 ms |
 | 4 → 5 | 8000 ms | 0 – 500 ms | 8000 – 8500 ms |
 
-El cliente imprime en cada paso las dos componentes por separado, para que se vea
-que el jitter efectivamente varía:
+### ¿Cuándo reintenta y cuándo no?
 
-```
-   backoff = 1000 ms  |  jitter = 60 ms
-.. Esperando 1060 ms antes de reintentar.
-```
+| Qué pasó | ¿Reintenta? |
+|---|---|
+| No se pudo conectar / se cortó / tardó demasiado | Sí |
+| El servidor contestó `ERROR: 503` (está sobrecargado) | Sí |
+| El servidor contestó `ERROR: 400` (el pedido está mal, ej. dividir por 0) | **No** |
+| Llegó el resultado | No hace falta |
 
-### Reintentos solo ante fallos transitorios
-
-El cliente clasifica la respuesta antes de decidir si reintenta:
-
-| Respuesta recibida | Clasificación | ¿Reintenta? |
-|---|---|---|
-| `IOException` / `ConnectException` / timeout | transitoria | sí |
-| conexión cerrada sin respuesta (`null`) | transitoria | sí |
-| `ERROR: 503 ...` | transitoria | sí |
-| `ERROR: 400 ...` (división por cero, formato, operador) | permanente | no |
-| un resultado numérico | éxito | — |
-
-Reintentar un `400` sería inútil: la petición está mal formada y va a fallar
-igual las cinco veces. Por eso el cliente corta de inmediato.
+Si el pedido está mal, va a fallar siempre. No tiene sentido reintentar.
 
 ---
 
-## Ejercicio 2 — Métricas de resiliencia
+## Ejercicio 2 — Métricas
 
-Al terminar, el cliente imprime un bloque de métricas:
+Al terminar, el cliente muestra un resumen:
 
 ```
-=================================================
-  METRICAS DE RESILIENCIA
-=================================================
 Estado final de la peticion : EXITO
 Detalle                     : 45
 Cantidad de intentos        : 4
 Tiempo total acumulado      : 8180 ms
   - esperando (backoff)     : 7587 ms
   - comunicacion efectiva   : 593 ms
-=================================================
 ```
 
 - **Estado final:** `EXITO` o `FALLO DEFINITIVO`.
-- **Cantidad de intentos:** cuántas veces se abrió realmente un socket.
-- **Tiempo total acumulado:** medido con `System.currentTimeMillis()` desde
-  antes del primer intento hasta después del último.
+- **Intentos:** cuántas veces se conectó.
+- **Tiempo total:** desde el primer intento hasta el último.
 
-El desglose entre *espera* y *comunicación efectiva* no lo pedía la consigna,
-pero deja a la vista el costo real de la política: de los 8180 ms del ejemplo,
-**7587 ms fueron espera deliberada** y solo 593 ms trabajo de red. Ese es el
-precio de la resiliencia, y es lo que obliga a fijar un `MAX_INTENTOS`.
+Se agregó también cuánto tiempo fue espera y cuánto fue trabajo real. En el
+ejemplo, casi todo (7587 ms) fue espera. Por eso hay un máximo de 5 intentos.
 
 ---
 
-## Capturas de la ejecución
+## Capturas
 
-### 1. Cliente recuperándose de un error simulado
+### 1. El cliente se recupera
 
-Los tres primeros intentos reciben `ERROR: 503`; el cuarto tiene éxito y devuelve
-`45`. Se ve el backoff creciendo (1000 → 2000 → 4000 ms) y el jitter distinto en
-cada paso.
+Falla 3 veces (`503`) y a la cuarta funciona. La espera crece (1000 → 2000 →
+4000 ms) y el número al azar cambia cada vez.
 
 ![Cliente recuperándose](capturas/01-cliente-recuperacion.png)
 
-### 2. Log del servidor inestable durante esa misma ejecución
+### 2. Lo que ve el servidor
 
-Cuatro conexiones, cada una desde un puerto efímero distinto. Las tres primeras
-se rechazan por sobrecarga simulada, la cuarta se procesa normalmente.
+Cuatro conexiones: rechaza las tres primeras y la cuarta la responde.
 
 ![Servidor inestable](capturas/02-servidor-inestable.png)
 
-### 3. Fallo definitivo — servidor apagado
+### 3. Servidor apagado
 
-Sin servidor escuchando, los cinco intentos terminan en `ConnectException` y el
-cliente reporta `FALLO DEFINITIVO` tras 16 329 ms.
+Los 5 intentos fallan y el cliente termina con `FALLO DEFINITIVO`.
 
 ![Fallo definitivo](capturas/03-fallo-definitivo.png)
 
-### 4. Fallo permanente — sin reintentos
+### 4. Pedido mal hecho: no reintenta
 
-`10;/;0` devuelve `ERROR: 400 Division por cero`. El cliente lo reconoce como
-permanente y corta en el primer intento: 1 intento, 174 ms, cero esperas.
+`10;/;0` da `ERROR: 400`. El cliente corta en el primer intento, sin esperar.
 
 ![Fallo permanente](capturas/04-fallo-permanente.png)
 
-> Las salidas de consola completas de las cuatro ejecuciones también están
-> guardadas como archivos `.txt` en la carpeta `capturas/`.
+> Las salidas completas también están como `.txt` en `capturas/`.
 
 ---
 
-## Ejercicio 3 — Análisis teórico
+## Ejercicio 3 — Preguntas
 
-### Pregunta 1 — ¿Qué problema genera que todos los clientes reintenten al mismo tiempo y con intervalos fijos?
+### Pregunta 1 — ¿Qué pasa si todos los clientes reintentan al mismo tiempo y con el mismo intervalo?
 
-Se produce el **Thundering Herd Problem** (efecto estampida o "manada
-atronadora"): un pico de carga sincronizado que impide que el servidor se
-recupere.
+Se produce el **efecto estampida** (*Thundering Herd*).
 
-**Por qué se sincronizan.** Cuando un servidor se satura o se reinicia, falla
-para *todos* los clientes prácticamente en el mismo instante. Si todos usan la
-misma política de espera fija —por ejemplo, "reintentar a los 2 segundos"—,
-todos van a reintentar exactamente 2 segundos después de ese instante común. El
-fallo actúa como una señal de largada que alinea a la flota entera.
+Imaginemos que el servidor se cae. Le falla a todos los clientes **en el mismo
+momento**. Si todos esperan, por ejemplo, 2 segundos fijos, **todos vuelven al
+mismo tiempo**. El servidor recibe una avalancha de pedidos juntos, se vuelve a
+caer, y así una y otra vez. El servidor no se puede recuperar porque los
+propios clientes lo tiran abajo.
 
-**Por qué se agrava con cada ronda.** El servidor recibe una ráfaga de N
-peticiones simultáneas, vuelve a saturarse, vuelve a fallar para todos, y todos
-vuelven a esperar el mismo intervalo. La estampida se repite en oleadas cada vez
-más nutridas, porque a los clientes que reintentan se suman los nuevos. El
-sistema queda atrapado en un ciclo de fallo del que **no puede salir solo**,
-incluso cuando la causa original del problema ya desapareció: es una *falla
-metaestable*, sostenida ya no por la causa inicial sino por el propio tráfico de
-reintentos.
+Duplicar la espera ayuda, pero no alcanza: si todos duplican igual, siguen
+llegando todos juntos, solo que más espaciados.
 
-**Por qué el backoff exponencial solo no alcanza.** Duplicar la espera reduce la
-frecuencia de los reintentos, pero **no rompe la sincronización**: si todos los
-clientes fallaron juntos, todos calculan 1000 ms, después 2000 ms, después 4000
-ms… y siguen llegando juntos, solo que más espaciados en el tiempo. Las ráfagas
-son menos frecuentes, pero igual de altas y puntiagudas.
-
-**Qué aporta el jitter.** Sumar `Random(0, 500)` ms hace que dos clientes que
-fallaron en el mismo milisegundo esperen tiempos distintos. Con eso, la ráfaga
-se *dispersa*: en lugar de N peticiones concentradas en un instante, llegan N
-peticiones repartidas en una ventana de 500 ms. El pico instantáneo baja, el
-servidor puede ir drenando la cola de a poco y recuperarse de verdad.
+**La solución es el jitter**: sumarle un tiempo al azar. Así cada cliente vuelve
+en un momento distinto y los pedidos llegan repartidos.
 
 ```
-Sin jitter (intervalos fijos)          Con jitter
-      |                                     |
-carga |    #       #       #           carga|  ####   ####   ####
-      |    #       #       #                |  ####   ####   ####
-      +----+-------+-------+---- t          +--+------+------+---- t
-   picos que vuelven a tumbar           carga repartida: el servidor
-   al servidor en cada ronda            alcanza a atender y se recupera
+Sin jitter                          Con jitter
+carga |  #     #     #              carga | ###   ###   ###
+      |  #     #     #                    | ###   ###   ###
+      +--+-----+-----+--- tiempo          +-+-----+-----+--- tiempo
+  todos juntos: el servidor se cae    repartidos: el servidor aguanta
 ```
 
-**Efectos concretos del problema:**
+Otras ayudas: poner un máximo de intentos (como acá) y un tope a la espera.
 
-- Se consumen todas las conexiones y los hilos disponibles del servidor.
-- La latencia se dispara para los clientes legítimos que recién llegan.
-- Se comporta como un **DDoS autoinfligido**: el propio sistema se ataca.
-- Si hay autoescalado, las instancias nuevas se saturan apenas arrancan.
-- En arquitecturas de microservicios el efecto se propaga aguas arriba y puede
-  terminar en una **falla en cascada**.
+### Pregunta 2 — ¿Qué diferencia hay entre un fallo transitorio y uno permanente?
 
-**Mitigaciones habituales, además del jitter:** límite máximo de reintentos
-(`MAX_INTENTOS`, implementado acá), tope superior de espera (*capped backoff*),
-*circuit breaker* para dejar de golpear un servicio caído, presupuesto de
-reintentos por cliente, y *deadline* global de la operación.
-
-### Pregunta 2 — Diferencia entre fallo transitorio y fallo permanente
-
-| | **Fallo transitorio** | **Fallo permanente** |
+| | **Transitorio** | **Permanente** |
 |---|---|---|
-| Causa | condición temporal del entorno | condición estable del sistema o de la petición |
-| Duración | se resuelve solo, en segundos o minutos | persiste hasta que alguien interviene |
-| ¿Reintentar sirve? | **sí**, es la estrategia correcta | **no**, solo desperdicia recursos |
-| Analogía | la línea está ocupada | el número no existe |
+| Qué es | Un problema momentáneo | Un problema que no se arregla solo |
+| ¿Sirve reintentar? | **Sí** | **No** |
+| Ejemplo cotidiano | "La línea está ocupada" | "El número no existe" |
+| Ejemplo real | Un servidor sobrecargado (`503`), un corte de red | Pedir un usuario que no existe (`404`), datos mal enviados (`400`) |
+| En este TP | `ERROR: 503` → el cliente reintenta (captura 1) | `ERROR: 400 Division por cero` → corta enseguida (captura 4) |
 
-**Fallo transitorio.** Es un fallo que **desaparece por sí mismo** si se espera
-lo suficiente: la petición era válida y volvería a serlo. La causa es el estado
-momentáneo del entorno, no la petición.
+**Por qué importa:**
 
-*Ejemplo en una arquitectura distribuida:* un servicio de pagos devuelve
-`503 Service Unavailable` porque su pool de conexiones a la base de datos está
-agotado por un pico de tráfico. En 2 segundos se liberan conexiones y la misma
-petición, sin cambiarle una coma, se procesa correctamente. Otros casos típicos:
-timeouts de red, pérdida de paquetes, `429 Too Many Requests` por rate limiting,
-la reelección de líder de un cluster, un contenedor reiniciándose durante un
-deploy.
+- Si tratás un fallo **transitorio** como permanente, te rendís antes de tiempo
+  y perdés algo que iba a funcionar.
+- Si tratás un fallo **permanente** como transitorio, reintentás de gusto:
+  gastás recursos, el usuario espera más y encima sumás carga al servidor.
 
-*En este TP:* es lo que simula `ServidorInestable` con el `ERROR: 503`, y lo que
-el cliente reintenta hasta recuperarse (captura 1).
-
-**Fallo permanente.** El fallo se va a repetir idéntico las veces que se
-reintente, porque la causa está en la petición o en una condición estable del
-sistema. Reintentar no solo es inútil: **empeora las cosas**, porque suma carga
-sin ninguna posibilidad de éxito.
-
-*Ejemplo en una arquitectura distribuida:* el cliente pide
-`GET /api/usuarios/9999` y el servicio responde `404 Not Found` porque ese
-usuario no existe. Reintentarlo 5 veces con backoff da 5 veces `404`. Otros
-casos: `400 Bad Request` por un JSON mal formado, `401`/`403` por credenciales
-inválidas, una violación de restricción de integridad en la base, un host que
-no resuelve por DNS.
-
-*En este TP:* es el `ERROR: 400 Division por cero`. El cliente lo detecta, corta
-en el primer intento y lo reporta como `FALLO DEFINITIVO` (captura 4).
-
-**Por qué importa la distinción.** Es la decisión de diseño central de cualquier
-política de reintentos:
-
-- Tratar un **transitorio como permanente** → se pierden operaciones que habrían
-  funcionado con solo esperar un segundo. El sistema se vuelve frágil.
-- Tratar un **permanente como transitorio** → se malgastan recursos, se retrasa
-  el error que el usuario necesita ver, y se contribuye a la estampida de la
-  pregunta 1.
-
-De ahí que el protocolo del TP distinga los códigos `503` (reintentable) y `400`
-(no reintentable) en la propia respuesta: la clasificación no se adivina desde el
-cliente, la comunica el servidor.
+Por eso el servidor manda el código (`503` o `400`): así el cliente sabe si
+tiene sentido volver a probar.
 
 ---
 
-## Detalles de implementación
+## Detalles
 
-- **`Socket.connect(addr, TIMEOUT_MS)` con timeout explícito** en vez del
-  constructor `new Socket(host, puerto)`. Sin timeout, un host inalcanzable deja
-  al cliente colgado el tiempo que decida el sistema operativo, y la política de
-  reintentos pierde todo sentido.
-- **`setSoTimeout(5000)`** para que un servidor que acepta la conexión pero nunca
-  responde también se trate como fallo transitorio y no como un bloqueo eterno.
-- **Clase interna `Respuesta`** con tres estados (éxito / fallo transitorio /
-  fallo permanente), para que la decisión de reintentar quede en un solo lugar.
-- **El servidor sigue siendo secuencial**, igual que en el TP1: la resiliencia se
-  resuelve del lado del cliente.
+- El cliente pone un **tiempo máximo para conectarse** (5 s). Si no, con una IP
+  que no responde podría quedarse colgado mucho tiempo.
+- También pone un **tiempo máximo para esperar la respuesta** (5 s), por si el
+  servidor se conecta pero nunca contesta.
+- El servidor sigue atendiendo de a uno, como en el TP1. Todo lo de reintentar
+  lo hace el cliente.
 
 ---
 
 ## Autor
 
+Ignacio Ruiz — DNI 39.040.338
 Trabajo Práctico N° 2 — Desarrollo de Aplicaciones para Ambientes Distribuidos

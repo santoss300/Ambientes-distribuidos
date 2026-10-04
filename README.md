@@ -1,14 +1,13 @@
-# Calculadora Distribuida — Trabajo Práctico N° 1
-
-Aplicación Cliente-Servidor en Java que resuelve operaciones matemáticas
-remotas comunicándose mediante **sockets TCP** (`java.net`).
+# Ambientes Distribuidos — Trabajos Prácticos
 
 **Materia:** Desarrollo de Aplicaciones para Ambientes Distribuidos
-**Tema:** Arquitectura Cliente-Servidor y Comunicación mediante Sockets TCP
+**Alumno:** Ignacio Ruiz — DNI 39.040.338
 
-> El análisis teórico completo (Ejercicio 2) está en **[INFORME.md](INFORME.md)**.
-> El Trabajo Práctico N° 2 —reintentos con backoff exponencial, jitter y
-> métricas de resiliencia— está en la carpeta **[TP2/](TP2/)**.
+| TP | Tema | Dónde está |
+|---|---|---|
+| **TP1** | Calculadora cliente-servidor con sockets TCP | Este README + [INFORME.md](INFORME.md) |
+| **TP2** | Reintentos con espera creciente y jitter | [TP2/](TP2/) |
+| **TP3** | Chat multihilo (TCP) y alertas con timeout (UDP) | [TP3/](TP3/) |
 
 ---
 
@@ -16,183 +15,116 @@ remotas comunicándose mediante **sockets TCP** (`java.net`).
 
 ```
 .
-├── src/
-│   ├── Servidor.java     Servidor TCP secuencial, escucha en el puerto 5500
-│   └── Cliente.java      Cliente de consola, host y puerto parametrizables
-├── capturas/             Capturas de pantalla de la ejecución
-├── TP2/                  Trabajo Práctico N° 2 — resiliencia y reintentos
-│   ├── src/              ClienteResiliente.java y ServidorInestable.java
-│   ├── capturas/         Salidas reales de las ejecuciones
-│   └── README.md         Consignas 1, 2 y 3 del TP2
-├── INFORME.md            Ejercicio 2 — análisis teórico-práctico
-└── README.md             Este archivo
+├── src/            TP1: Servidor.java y Cliente.java
+├── capturas/       TP1: capturas de pantalla
+├── INFORME.md      TP1: respuestas a las preguntas
+├── TP2/            TP2 completo (código, capturas y README)
+├── TP3/            TP3 completo (código, capturas y README)
+└── README.md       Este archivo
 ```
 
 ---
+
+# TP1 — Calculadora distribuida
+
+Un cliente le manda una cuenta a un servidor (por ejemplo `15 + 30`), el
+servidor la resuelve y le devuelve el resultado. Se comunican por red usando
+**sockets TCP**.
 
 ## Requisitos
 
-- **JDK 8 o superior** (desarrollado y probado con **JDK 21.0.8 LTS**).
+Java 8 o superior (probado con JDK 21). Para verificar: `java -version`
 
-Verificación:
+## Compilar
 
-```bash
-java -version
-javac -version
-```
-
----
-
-## Compilación
-
-Desde la raíz del proyecto:
+Desde la raíz del repositorio:
 
 ```bash
 javac -d bin src/Servidor.java src/Cliente.java
 ```
 
-Esto genera `bin/Servidor.class` y `bin/Cliente.class`.
+## Ejecutar
 
----
+Hacen falta **dos terminales**. Primero el servidor, después el cliente.
 
-## Ejecución
-
-Se necesitan **dos terminales**. El servidor tiene que estar levantado
-**antes** que el cliente.
-
-### 1. Terminal A — Servidor
+**Terminal A — servidor:**
 
 ```bash
 java -cp bin Servidor
 ```
 
-Salida esperada:
+Queda esperando conexiones en el puerto 5500. Se corta con `Ctrl+C`.
 
-```
-=========================================
-  SERVIDOR DE CALCULADORA DISTRIBUIDA
-=========================================
-Escuchando en el puerto 5500...
-(Ctrl+C para detener)
-```
-
-El servidor queda bloqueado en `accept()` esperando conexiones. Se detiene con
-`Ctrl+C`.
-
-### 2. Terminal B — Cliente
+**Terminal B — cliente:**
 
 ```bash
-java -cp bin Cliente
+java -cp bin Cliente                      # se conecta a esta misma compu
+java -cp bin Cliente 192.168.0.142 5500   # se conecta a otra compu de la red
 ```
 
-El cliente pide por consola los dos números y la operación, y muestra el
-resultado devuelto por el servidor.
+El cliente pide los dos números y la operación, y muestra el resultado.
 
-#### Conectarse a un servidor en otra máquina
+Para usarlo entre dos notebooks hay que abrir el puerto 5500 en el firewall.
+Está explicado en la [pregunta 3 del informe](INFORME.md#pregunta-3--qué-hay-que-cambiar-para-usarlo-entre-dos-notebooks-en-el-wi-fi-del-aula).
 
-El host y el puerto se pasan como argumentos:
+## Cómo se hablan
 
-```bash
-java -cp bin Cliente <host> [puerto]
+Se mandan una línea de texto:
 
-# Ejemplos
-java -cp bin Cliente                        # 127.0.0.1:5500 (por defecto)
-java -cp bin Cliente 192.168.0.142          # otra notebook, puerto 5500
-java -cp bin Cliente 192.168.0.142 5500     # host y puerto explícitos
-```
-
-Para ejecutarlo entre dos máquinas de la misma red Wi-Fi hay que habilitar
-además el puerto 5500 en el firewall del servidor — el procedimiento completo
-está en la [pregunta 3 del informe](INFORME.md#pregunta-3--proponga-qué-cambios-serían-necesarios-si-dos-compañeros-quisieran-ejecutar-el-cliente-en-una-notebook-y-el-servidor-en-otra-conectadas-al-wi-fi-del-aula).
-
----
-
-## Protocolo de comunicación
-
-Texto plano, un mensaje por línea, terminado en salto de línea.
-
-| Sentido | Formato | Ejemplo |
+| Quién | Formato | Ejemplo |
 |---|---|---|
-| Petición (cliente → servidor) | `numero1;operador;numero2` | `15;+;30` |
-| Respuesta correcta | el resultado | `45` |
-| Respuesta de error | `ERROR: <descripción>` | `ERROR: Division por cero` |
+| Cliente → Servidor | `numero1;operador;numero2` | `15;+;30` |
+| Servidor → Cliente | el resultado | `45` |
+| Si hay un error | `ERROR: <qué pasó>` | `ERROR: Division por cero` |
 
-Operadores admitidos: `+`, `-`, `*`, `/`
+Operaciones: `+`, `-`, `*`, `/`
 
-Errores controlados que devuelve el servidor:
+Errores que contesta el servidor:
 
-| Situación | Respuesta |
+| Caso | Respuesta |
 |---|---|
-| División por cero | `ERROR: Division por cero` |
-| Cantidad de campos incorrecta | `ERROR: Formato invalido. Se esperaba numero1;operador;numero2` |
-| Operandos no numéricos | `ERROR: Los operandos deben ser numeros enteros` |
-| Operador desconocido | `ERROR: Operador no soportado. Use + - * /` |
+| Dividir por cero | `ERROR: Division por cero` |
+| Formato mal escrito | `ERROR: Formato invalido. Se esperaba numero1;operador;numero2` |
+| Algo que no es número | `ERROR: Los operandos deben ser numeros enteros` |
+| Operación que no existe | `ERROR: Operador no soportado. Use + - * /` |
 
----
+## Capturas
 
-## Capturas de pantalla
-
-### 1. Servidor a la escucha en el puerto 5500
-
-El servidor se bloquea en `accept()` esperando a que un cliente se conecte.
+### 1. Servidor esperando conexiones
 
 ![Servidor escuchando](capturas/01-servidor-escuchando.png)
 
-### 2. Cliente ejecutando una operación (15 + 30)
+### 2. Una suma (15 + 30)
 
-Se ve el ciclo completo: los datos pedidos por consola, la cadena `"15;+;30"`
-empaquetada según el protocolo, y el resultado `45` devuelto por el servidor.
+Se ve lo que pide el cliente, el texto `"15;+;30"` que manda, y el `45` que vuelve.
 
 ![Operación de suma](capturas/02-operacion-suma.png)
 
-### 3. Varias operaciones, incluida la división por cero
+### 3. Varias cuentas y la división por cero
 
-Divisiones con resultado decimal (`45 / 6 = 7.5`) y el error controlado ante
-`10 / 0`. El servidor responde con un mensaje, no con una excepción.
+`45 / 6 = 7.5` y, con `10 / 0`, el servidor contesta con un mensaje de error en
+vez de romperse.
 
 ![División por cero](capturas/03-division-por-cero.png)
 
-### 4. Log del servidor
+### 4. Lo que registra el servidor
 
-El servidor registra cada conexión con la IP y el puerto efímero del cliente.
-Los puertos de origen distintos (`56549`, `56553`, `56555`) confirman que cada
-operación abre una conexión nueva.
+Cada conexión viene de un puerto distinto (`56549`, `56553`, `56555`): cada
+cuenta abre una conexión nueva.
 
 ![Log del servidor](capturas/04-log-del-servidor.png)
 
-### 5. Cliente con el servidor apagado — `ConnectException`
+### 5. Cliente con el servidor apagado
 
-Evidencia para la pregunta 1 del informe: `java.net.ConnectException:
-Connection refused: connect`, lanzada por el constructor de `Socket`.
+Sale el error `ConnectException: Connection refused` (se usa en la pregunta 1
+del informe).
 
 ![Servidor no disponible](capturas/05-servidor-no-disponible.png)
 
----
+## Detalles
 
-## Detalles de la implementación
-
-- **Servidor secuencial en bucle.** Atiende un cliente completo, cierra la
-  conexión y vuelve a `accept()`. Sin hilos.
-- **Una conexión por operación.** Cada cálculo abre y cierra su propio socket.
-- **`try-with-resources`** en ambos extremos, para garantizar el cierre de
-  sockets y streams incluso ante una excepción.
-- **El servidor nunca cae por culpa de un cliente.** Los errores de E/S de una
-  conexión se informan y el bucle continúa atendiendo a los demás.
-- **Los errores de aplicación viajan como datos**, no como excepciones: el
-  cliente siempre recibe una respuesta y nunca queda bloqueado en `readLine()`.
-
----
-
-## Trabajo Práctico N° 2
-
-La segunda entrega —**cliente resiliente** con reintentos, backoff exponencial
-con jitter y métricas— está en la carpeta [TP2/](TP2/), con su propio README que
-incluye la implementación, las capturas y el análisis teórico sobre el
-*Thundering Herd Problem* y la diferencia entre fallos transitorios y
-permanentes.
-
----
-
-## Autor
-
-Trabajos Prácticos N° 1 y N° 2 — Desarrollo de Aplicaciones para Ambientes Distribuidos
+- El servidor atiende **de a un cliente por vez**, sin hilos.
+- **Cada cuenta usa su propia conexión**: se abre, se usa y se cierra.
+- Las conexiones se cierran solas aunque haya un error (`try-with-resources`).
+- **Si un cliente falla, el servidor sigue andando** y atiende al siguiente.
+- Los errores se mandan como texto, así el cliente siempre recibe respuesta.

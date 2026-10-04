@@ -1,0 +1,26 @@
+=================================================
+  SERVIDOR DE CHAT MULTIHILO (TCP)
+=================================================
+Escuchando en el puerto 5000...
+(Ctrl+C para detener)
+
+[16:19:56] Conexion aceptada desde 127.0.0.1:51443 -> atendida por el hilo "cliente-1"
+[16:19:57] Ana entro al chat (hilo "cliente-1"). Conectados: 1
+[16:19:58] Conexion aceptada desde 127.0.0.1:51444 -> atendida por el hilo "cliente-2"
+[16:19:59] Bruno entro al chat (hilo "cliente-2"). Conectados: 2
+[16:20:00] Conexion aceptada desde 127.0.0.1:51446 -> atendida por el hilo "cliente-3"
+[16:20:00] Carla entro al chat (hilo "cliente-3"). Conectados: 3
+[16:20:01] Mensaje de Ana: "Hola a todos!" -> reenviado a 2 cliente(s)
+[16:20:02] Mensaje de Bruno: "Hola Ana, como va?" -> reenviado a 2 cliente(s)
+[16:20:03] Mensaje de Carla: "Buenas! Somos 3 conectados al mismo tiempo" -> reenviado a 2 cliente(s)
+[16:20:04] Mensaje de Ana: "Bien, probando el TP3" -> reenviado a 2 cliente(s)
+[16:20:04] Mensaje de Bruno: "Me voy, chau!" -> reenviado a 2 cliente(s)
+[16:20:05] Bruno se desconecto. Socket cerrado. Conectados: 2
+[16:20:07] Conexion con Carla cortada de golpe: Connection reset
+[16:20:07] Carla se desconecto. Socket cerrado. Conectados: 1
+[16:20:09] Mensaje de Ana: "Quede sola, pero el servidor sigue andando" -> reenviado a 0 cliente(s)
+[16:20:10] Conexion aceptada desde 127.0.0.1:64737 -> atendida por el hilo "cliente-4"
+[16:20:11] Diego entro al chat (hilo "cliente-4"). Conectados: 2
+[16:20:11] Mensaje de Diego: "Recien llego, hola Ana" -> reenviado a 1 cliente(s)
+[16:20:13] Ana se desconecto. Socket cerrado. Conectados: 1
+[16:20:14] Diego se desconecto. Socket cerrado. Conectados: 0
