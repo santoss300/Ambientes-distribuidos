@@ -9,6 +9,7 @@
 | **TP2** | Reintentos con espera creciente y jitter | [TP2/](TP2/) |
 | **TP3** | Chat multihilo (TCP) y alertas con timeout (UDP) | [TP3/](TP3/) |
 | **TP4** | Mandar datos por la red: JSON vs Binario | [TP4/](TP4/) |
+| **TP5** | Modelo de Actores: sensores y procesador | [TP5/](TP5/) |
 
 ---
 
@@ -22,6 +23,7 @@
 ├── TP2/            TP2 completo (código, capturas y README)
 ├── TP3/            TP3 completo (código, capturas y README)
 ├── TP4/            TP4 completo (código, capturas y README)
+├── TP5/            TP5 completo (código, capturas y README)
 └── README.md       Este archivo
 ```
 
