@@ -1,0 +1,41 @@
+=================================================
+  CLIENTE DE TRANSACCIONES (TCP)
+=================================================
+Servidor destino : 127.0.0.1:7000
+Transacciones    : 1000 (las mismas en los dos formatos)
+
+Ejemplo: Transaccion{id=101, origen=NodoA, monto=5466.53, timestamp=1700000000084}
+  JSON    (69 bytes): {"id":101,"origen":"NodoA","monto":5466.53,"timestamp":1700000000084}
+  Binario (27 bytes): 00 00 00 65 00 05 4E 6F 64 6F 41 40 B5 5A 87 AE 14 7A E1 00 00 01 8B CF E5 68 54
+
+--- Enviando rafaga en formato JSON ---
+  Carga util enviada           : 72927 bytes
+  Con encabezados de largo     : 76932 bytes
+  Tiempo de serializacion      : 2,028 ms
+  Tiempo de envio              : 21,880 ms
+  Serializacion + envio        : 24,575 ms
+  Hasta confirmacion servidor  : 25,555 ms
+  Servidor confirmo            : 1000 transacciones, 72927 bytes  [OK]
+
+--- Enviando rafaga en formato BINARIO ---
+  Carga util enviada           : 30021 bytes
+  Con encabezados de largo     : 34026 bytes
+  Tiempo de serializacion      : 0,455 ms
+  Tiempo de envio              : 2,507 ms
+  Serializacion + envio        : 3,645 ms
+  Hasta confirmacion servidor  : 3,738 ms
+  Servidor confirmo            : 1000 transacciones, 30021 bytes  [OK]
+
+=================================================
+  COMPARACION JSON vs BINARIO
+=================================================
+                                   JSON      BINARIO
+  Carga util (bytes)              72927        30021
+  Bytes por transaccion              72           30
+  Serializacion                2,028 ms     0,455 ms
+  Serializacion + envio       24,575 ms     3,645 ms
+-------------------------------------------------
+  El binario ocupa un 58,8% menos que JSON
+  JSON ocupa 2,43 veces lo que ocupa el binario
+  Serializar en JSON tardo 4,46 veces lo que el binario
+=================================================

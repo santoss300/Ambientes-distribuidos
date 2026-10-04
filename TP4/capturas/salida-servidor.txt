@@ -1,0 +1,90 @@
+=================================================
+  SERVIDOR DE TRANSACCIONES (TCP)
+=================================================
+Escuchando en el puerto 7000...
+(Ctrl+C para detener)
+
+Cliente conectado desde 127.0.0.1:65175
+  Formato recibido          : JSON
+  Transacciones recibidas   : 1000
+  Carga util recibida       : 72927 bytes
+  Tiempo de unmarshalling   : 11,966 ms
+  Tiempo total (leer+armar) : 30,392 ms
+  Suma de montos (control)  : 49840580,03
+  Primera transaccion       : Transaccion{id=101, origen=NodoA, monto=5466.53, timestamp=1700000000084}
+
+Cliente conectado desde 127.0.0.1:65176
+  Formato recibido          : BINARIO
+  Transacciones recibidas   : 1000
+  Carga util recibida       : 30021 bytes
+  Tiempo de unmarshalling   : 0,542 ms
+  Tiempo total (leer+armar) : 1,693 ms
+  Suma de montos (control)  : 49840580,03
+  Primera transaccion       : Transaccion{id=101, origen=NodoA, monto=5466.53, timestamp=1700000000084}
+
+=================================================
+  COMPARACION EN EL SERVIDOR
+=================================================
+                                 JSON      BINARIO
+  Bytes recibidos               72927        30021
+  Unmarshalling             11,966 ms     0,542 ms
+  Total (leer+armar)        30,392 ms     1,693 ms
+  Mismos datos en ambos formatos: SI
+=================================================
+
+Cliente conectado desde 127.0.0.1:65177
+  Formato recibido          : JSON
+  Transacciones recibidas   : 1000
+  Carga util recibida       : 72927 bytes
+  Tiempo de unmarshalling   : 20,943 ms
+  Tiempo total (leer+armar) : 34,935 ms
+  Suma de montos (control)  : 49840580,03
+  Primera transaccion       : Transaccion{id=101, origen=NodoA, monto=5466.53, timestamp=1700000000084}
+
+Cliente conectado desde 127.0.0.1:65178
+  Formato recibido          : BINARIO
+  Transacciones recibidas   : 1000
+  Carga util recibida       : 30021 bytes
+  Tiempo de unmarshalling   : 0,599 ms
+  Tiempo total (leer+armar) : 6,489 ms
+  Suma de montos (control)  : 49840580,03
+  Primera transaccion       : Transaccion{id=101, origen=NodoA, monto=5466.53, timestamp=1700000000084}
+
+=================================================
+  COMPARACION EN EL SERVIDOR
+=================================================
+                                 JSON      BINARIO
+  Bytes recibidos               72927        30021
+  Unmarshalling             20,943 ms     0,599 ms
+  Total (leer+armar)        34,935 ms     6,489 ms
+  Mismos datos en ambos formatos: SI
+=================================================
+
+Cliente conectado desde 127.0.0.1:65180
+  Formato recibido          : JSON
+  Transacciones recibidas   : 1000
+  Carga util recibida       : 72927 bytes
+  Tiempo de unmarshalling   : 3,852 ms
+  Tiempo total (leer+armar) : 17,711 ms
+  Suma de montos (control)  : 49840580,03
+  Primera transaccion       : Transaccion{id=101, origen=NodoA, monto=5466.53, timestamp=1700000000084}
+
+Cliente conectado desde 127.0.0.1:65181
+  Formato recibido          : BINARIO
+  Transacciones recibidas   : 1000
+  Carga util recibida       : 30021 bytes
+  Tiempo de unmarshalling   : 0,547 ms
+  Tiempo total (leer+armar) : 2,277 ms
+  Suma de montos (control)  : 49840580,03
+  Primera transaccion       : Transaccion{id=101, origen=NodoA, monto=5466.53, timestamp=1700000000084}
+
+=================================================
+  COMPARACION EN EL SERVIDOR
+=================================================
+                                 JSON      BINARIO
+  Bytes recibidos               72927        30021
+  Unmarshalling              3,852 ms     0,547 ms
+  Total (leer+armar)        17,711 ms     2,277 ms
+  Mismos datos en ambos formatos: SI
+=================================================
+
