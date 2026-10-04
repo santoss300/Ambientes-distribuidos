@@ -1,0 +1,52 @@
+=================================================
+  CLIENTE RMI DE PROCESAMIENTO
+=================================================
+Hola ignac, estas conectado al servidor de procesamiento.
+
+1) Calcular estadisticas de una lista de numeros
+2) Validar un CUIT
+3) Filtrar textos
+0) Salir
+Opcion: 1
+Ingrese los numeros separados por espacios: 10 20 30 40 50 7.5
+-> promedio = 26,25 | maximo = 50,00 | minimo = 7,50 | desviacion estandar = 15,39
+
+1) Calcular estadisticas de una lista de numeros
+2) Validar un CUIT
+3) Filtrar textos
+0) Salir
+Opcion: 2
+Ingrese el CUIT (ej. 20-12345678-6): 20-12345678-6
+-> El CUIT 20-12345678-6 es VALIDO
+
+1) Calcular estadisticas de una lista de numeros
+2) Validar un CUIT
+3) Filtrar textos
+0) Salir
+Opcion: 2
+Ingrese el CUIT (ej. 20-12345678-6): 20-12345678-5
+-> El CUIT 20-12345678-5 es INVALIDO
+
+1) Calcular estadisticas de una lista de numeros
+2) Validar un CUIT
+3) Filtrar textos
+0) Salir
+Opcion: 3
+Ingrese los textos separados por comas: Buenos Aires, San Miguel de Tucuman, Cordoba, Tucuman Norte, Mendoza
+Ingrese el patron a buscar: tucuman
+-> Coinciden 2: [San Miguel de Tucuman, Tucuman Norte]
+
+1) Calcular estadisticas de una lista de numeros
+2) Validar un CUIT
+3) Filtrar textos
+0) Salir
+Opcion: 1
+Ingrese los numeros separados por espacios: diez veinte
+!! Solo se pueden ingresar numeros.
+
+1) Calcular estadisticas de una lista de numeros
+2) Validar un CUIT
+3) Filtrar textos
+0) Salir
+Opcion: 0
+Chau!

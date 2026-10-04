@@ -1,0 +1,31 @@
+=================================================
+  CLIENTE RMI DE PROCESAMIENTO
+=================================================
+Hola ignac, estas conectado al servidor de procesamiento.
+
+1) Calcular estadisticas de una lista de numeros
+2) Validar un CUIT
+3) Filtrar textos
+0) Salir
+Opcion: 2
+Ingrese el CUIT (ej. 20-12345678-6): 20-12345678-6
+-> El CUIT 20-12345678-6 es VALIDO
+
+1) Calcular estadisticas de una lista de numeros
+2) Validar un CUIT
+3) Filtrar textos
+0) Salir
+Opcion: 1
+Ingrese los numeros separados por espacios: 1 2 3
+!! Error remoto: java.rmi.ConnectException
+   Connection refused to host: 192.168.0.142
+   Intentando reconectar...
+!! No se pudo conectar con el servidor en 127.0.0.1:1099
+   (java.rmi.ConnectException)
+
+1) Calcular estadisticas de una lista de numeros
+2) Validar un CUIT
+3) Filtrar textos
+0) Salir
+Opcion: 0
+Chau!

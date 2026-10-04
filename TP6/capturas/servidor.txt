@@ -1,0 +1,12 @@
+=================================================
+  SERVIDOR RMI DE PROCESAMIENTO
+=================================================
+Registro RMI iniciado en el puerto 1099
+Servicio publicado como "ServicioProcesamiento"
+Esperando clientes... (Ctrl+C para detener)
+
+[17:01:53] [192.168.0.142] Se conecto el cliente "ignac"
+[17:01:55] [192.168.0.142] calcularEstadisticas([10.0, 20.0, 30.0, 40.0, 50.0, 7.5])
+[17:01:56] [192.168.0.142] validarCuit("20-12345678-6") -> valido
+[17:01:58] [192.168.0.142] validarCuit("20-12345678-5") -> invalido
+[17:02:00] [192.168.0.142] filtrarTextos(5 textos, patron "tucuman") -> 2 coincidencias
