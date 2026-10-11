@@ -1,6 +1,7 @@
 # Ambientes Distribuidos — Trabajos Prácticos
 
 **Materia:** Desarrollo de Aplicaciones para Ambientes Distribuidos
+**Docente:** Lic. Gabriel Artaza
 **Alumno:** Ignacio Ruiz — DNI 39.040.338
 
 | TP | Tema | Dónde está |
