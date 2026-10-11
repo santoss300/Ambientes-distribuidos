@@ -1,0 +1,8 @@
+$ curl -i -X POST -H "Content-Type: application/json" -d '{"nombre":"Webcam","precio":' http://localhost:8080/productos
+HTTP/1.1 400 
+Content-Type: application/json
+Transfer-Encoding: chunked
+Date: Sun, 11 Oct 2026 19:08:27 GMT
+Connection: close
+
+{"error":"El JSON enviado no es valido","estado":400}

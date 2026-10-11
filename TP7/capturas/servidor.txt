@@ -1,0 +1,27 @@
+=================================================
+  API REST de productos en http://localhost:8080
+  GET  /productos
+  GET  /productos/{id}
+  POST /productos
+=================================================
+GET /productos -> 3 productos
+POST /productos
+  JSON recibido: {"nombre": "Auriculares", "precio": 35000.0, "stock": 8}
+  Producto guardado con id 4
+GET /productos/4
+GET /productos/99
+  ERROR 404: No existe el producto con id 99
+  ERROR 400: El id tiene que ser un numero
+POST /productos
+  JSON recibido: {"nombre": "", "precio": 5000.0, "stock": 2}
+  ERROR 400: El nombre es obligatorio
+POST /productos
+  JSON recibido: {"nombre": "Parlante", "precio": -500.0, "stock": 3}
+  ERROR 400: El precio tiene que ser mayor a 0
+POST /productos
+  JSON recibido: {"nombre":"Webcam","precio":42000,"stock":6}
+  Producto guardado con id 5
+GET /productos/5
+POST /productos
+  JSON recibido: {"nombre":"Webcam","precio":
+  ERROR 400: El JSON enviado no es valido

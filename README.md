@@ -11,6 +11,7 @@
 | **TP4** | Mandar datos por la red: JSON vs Binario | [TP4/](TP4/) |
 | **TP5** | Modelo de Actores: sensores y procesador | [TP5/](TP5/) |
 | **TP6** | Servidor de procesamiento con Java RMI | [TP6/](TP6/) |
+| **TP7** | API REST de productos (Spring Boot) y cliente en Python | [TP7/](TP7/) |
 
 ---
 
@@ -26,6 +27,7 @@
 ├── TP4/            TP4 completo (código, capturas y README)
 ├── TP5/            TP5 completo (código, capturas y README)
 ├── TP6/            TP6 completo (código, capturas y README)
+├── TP7/            TP7 completo (servidor, cliente, capturas y README)
 └── README.md       Este archivo
 ```
 

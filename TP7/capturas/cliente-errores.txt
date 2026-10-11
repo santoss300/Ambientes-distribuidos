@@ -1,0 +1,71 @@
+=================================================
+  CLIENTE DE LA API DE PRODUCTOS
+  Servidor: http://localhost:8080/productos
+=================================================
+
+1) Listar productos
+2) Buscar producto por id
+3) Agregar producto
+0) Salir
+Opcion: 2
+Id del producto: 99
+
+>>> GET http://localhost:8080/productos/99
+<<< 404 | JSON recibido: {"error":"No existe el producto con id 99","estado":404}
+ERROR: No existe el producto con id 99
+
+1) Listar productos
+2) Buscar producto por id
+3) Agregar producto
+0) Salir
+Opcion: 2
+Id del producto: abc
+
+>>> GET http://localhost:8080/productos/abc
+<<< 400 | JSON recibido: {"error":"El id tiene que ser un numero","estado":400}
+ERROR: El id tiene que ser un numero
+
+1) Listar productos
+2) Buscar producto por id
+3) Agregar producto
+0) Salir
+Opcion: 3
+Nombre: 
+Precio: 5000
+Stock: 2
+
+>>> POST http://localhost:8080/productos
+>>> JSON enviado: {"nombre": "", "precio": 5000.0, "stock": 2}
+<<< 400 | JSON recibido: {"error":"El nombre es obligatorio","estado":400}
+ERROR: El nombre es obligatorio
+
+1) Listar productos
+2) Buscar producto por id
+3) Agregar producto
+0) Salir
+Opcion: 3
+Nombre: Parlante
+Precio: -500
+Stock: 3
+
+>>> POST http://localhost:8080/productos
+>>> JSON enviado: {"nombre": "Parlante", "precio": -500.0, "stock": 3}
+<<< 400 | JSON recibido: {"error":"El precio tiene que ser mayor a 0","estado":400}
+ERROR: El precio tiene que ser mayor a 0
+
+1) Listar productos
+2) Buscar producto por id
+3) Agregar producto
+0) Salir
+Opcion: 3
+Nombre: Cable HDMI
+Precio: 4500
+Stock: diez
+ERROR: precio y stock tienen que ser numeros
+
+1) Listar productos
+2) Buscar producto por id
+3) Agregar producto
+0) Salir
+Opcion: 0
+Chau!

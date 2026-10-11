@@ -9,3 +9,9 @@ bin/
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# Maven
+target/
+
+# Python
+__pycache__/

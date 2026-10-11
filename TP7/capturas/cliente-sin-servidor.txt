@@ -1,0 +1,20 @@
+=================================================
+  CLIENTE DE LA API DE PRODUCTOS
+  Servidor: http://localhost:8080/productos
+=================================================
+
+1) Listar productos
+2) Buscar producto por id
+3) Agregar producto
+0) Salir
+Opcion: 1
+
+>>> GET http://localhost:8080/productos
+ERROR: no se pudo conectar con el servidor en http://localhost:8080/productos
+
+1) Listar productos
+2) Buscar producto por id
+3) Agregar producto
+0) Salir
+Opcion: 0
+Chau!

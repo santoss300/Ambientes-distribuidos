@@ -1,0 +1,51 @@
+=================================================
+  CLIENTE DE LA API DE PRODUCTOS
+  Servidor: http://localhost:8080/productos
+=================================================
+
+1) Listar productos
+2) Buscar producto por id
+3) Agregar producto
+0) Salir
+Opcion: 1
+
+>>> GET http://localhost:8080/productos
+<<< 200 | JSON recibido: [{"id":1,"nombre":"Teclado","precio":25000.0,"stock":10},{"id":2,"nombre":"Mouse","precio":12000.0,"stock":25},{"id":3,"nombre":"Monitor 24","precio":180000.0,"stock":4}]
+Productos (3):
+  #1  Teclado         $  25000.00  stock: 10
+  #2  Mouse           $  12000.00  stock: 25
+  #3  Monitor 24      $ 180000.00  stock: 4
+
+1) Listar productos
+2) Buscar producto por id
+3) Agregar producto
+0) Salir
+Opcion: 3
+Nombre: Auriculares
+Precio: 35000
+Stock: 8
+
+>>> POST http://localhost:8080/productos
+>>> JSON enviado: {"nombre": "Auriculares", "precio": 35000.0, "stock": 8}
+<<< 201 | JSON recibido: {"id":4,"nombre":"Auriculares","precio":35000.0,"stock":8}
+Producto creado:
+  #4  Auriculares     $  35000.00  stock: 8
+
+1) Listar productos
+2) Buscar producto por id
+3) Agregar producto
+0) Salir
+Opcion: 2
+Id del producto: 4
+
+>>> GET http://localhost:8080/productos/4
+<<< 200 | JSON recibido: {"id":4,"nombre":"Auriculares","precio":35000.0,"stock":8}
+Producto encontrado:
+  #4  Auriculares     $  35000.00  stock: 8
+
+1) Listar productos
+2) Buscar producto por id
+3) Agregar producto
+0) Salir
+Opcion: 0
+Chau!
