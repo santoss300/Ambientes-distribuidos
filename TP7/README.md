@@ -1,17 +1,19 @@
-# TP7 — API REST de productos y cliente independiente
+# TP7 — API REST de productos
 
-| | |
+Trabajo Práctico N° 7 — Desarrollo de Aplicaciones para Ambientes Distribuidos
+(Lic. Gabriel Artaza).
+
+**Alumno:** Ignacio Ruiz — DNI 39.040.338
+**Servidor:** Java + Spring Boot · **Cliente:** Python
+
+Un servidor guarda una lista de productos y un cliente se conecta para verlos y
+agregar nuevos. Se mandan los datos en **JSON** por **HTTP**.
+
+| Pedido | Qué hace |
 |---|---|
-| **Alumno** | Ignacio Ruiz — DNI 39.040.338 |
-| **Materia** | Desarrollo de Aplicaciones para Ambientes Distribuidos |
-| **Cátedra / Docente** | Lic. Gabriel Artaza |
-| **Trabajo** | Trabajo Práctico N° 7 — Integración entre Capas y Consumo de APIs |
-| **Servidor** | Java 21 + Spring Boot 3.3 (REST sobre HTTP/JSON) |
-| **Cliente** | Python 3 (solo librerías que vienen con Python: `urllib` y `json`) |
-
-Un servidor guarda una lista de **productos**. Un cliente, que es otro programa
-aparte, se conecta por la red para ver, buscar y agregar productos. Se pasan
-los datos en formato **JSON** usando **HTTP** (lo mismo que usan las páginas web).
+| `GET /productos` | Devuelve todos los productos |
+| `GET /productos/{id}` | Devuelve un producto (o `404` si no existe) |
+| `POST /productos` | Recibe un producto nuevo y lo guarda |
 
 ---
 
@@ -19,154 +21,93 @@ los datos en formato **JSON** usando **HTTP** (lo mismo que usan las páginas we
 
 ```
 TP7/
-├── servidor/                      API REST (Spring Boot)
-│   ├── pom.xml
+├── servidor/        El servidor (Spring Boot)
 │   └── src/main/java/tp7/
-│       ├── Servidor.java          Arranca el servidor en el puerto 8080
-│       ├── Producto.java          El dato que viaja: id, nombre, precio y stock
-│       ├── ProductoController.java  Los endpoints GET y POST
-│       └── ManejoDeErrores.java   Convierte los errores en respuestas JSON con su código
+│       ├── Servidor.java            Arranca el servidor
+│       ├── Producto.java            Los datos de un producto
+│       ├── ProductoController.java  Los pedidos GET y POST
+│       └── ManejoDeErrores.java     Las respuestas de error
 ├── cliente/
-│   └── cliente.py                 Cliente de consola con menú
+│   └── cliente.py   El cliente con menú
 ├── capturas/
 └── README.md
 ```
 
-## Endpoints
-
-| Método | Ruta | Qué hace | Respuesta |
-|---|---|---|---|
-| `GET` | `/productos` | Devuelve todos los productos | `200` + lista en JSON |
-| `GET` | `/productos/{id}` | Devuelve un producto | `200` + producto, o `404` si no existe |
-| `POST` | `/productos` | Recibe un producto en JSON y lo guarda | `201` + producto con su id nuevo |
-
-Ejemplo de lo que manda el cliente en el `POST`:
-
-```json
-{"nombre": "Auriculares", "precio": 35000.0, "stock": 8}
-```
-
-y lo que contesta el servidor:
-
-```json
-{"id": 4, "nombre": "Auriculares", "precio": 35000.0, "stock": 8}
-```
-
-Los productos se guardan en memoria (una lista), así que al reiniciar el
-servidor vuelven a ser los 3 del principio.
-
 ---
 
-## Arquitectura
+## Cómo se comunican
 
 ```mermaid
 flowchart LR
-    U([Usuario]) --> C["Cliente<br/>cliente.py (Python)"]
-    C -- "Petición HTTP/1.1<br/>GET / POST + JSON" --> S["Servidor<br/>Spring Boot (Java)<br/>puerto 8080"]
-    S -- "Respuesta HTTP/1.1<br/>código + JSON" --> C
-    S --> L[("Lista de productos<br/>en memoria")]
+    C["Cliente<br/>(Python)"] -- "pedido HTTP + JSON" --> S["Servidor<br/>(Java, puerto 8080)"]
+    S -- "respuesta HTTP + JSON" --> C
 ```
 
-Paso a paso:
-
-1. El cliente convierte los datos a texto JSON (**marshalling**).
-2. Lo manda al servidor por HTTP.
-3. El servidor convierte ese texto en un `Producto` de Java (**unmarshalling**).
-4. El servidor contesta con un código (por ejemplo `200` o `404`) y un JSON.
-5. El cliente lee ese JSON y lo muestra en pantalla.
-
-Como solo viaja texto JSON, no importa que el servidor esté en Java y el
-cliente en Python: se entienden igual.
-
----
-
-## Manejo de errores
-
-**En el servidor** (`ManejoDeErrores.java`): si algo sale mal, contesta con un
-código y un mensaje, por ejemplo `{"estado": 404, "error": "..."}`:
-
-| Caso | Código |
-|---|---|
-| Producto que no existe (`/productos/99`) | `404 Not Found` |
-| Ruta que no existe (`/cualquiercosa`) | `404 Not Found` |
-| Id que no es número (`/productos/abc`) | `400 Bad Request` |
-| JSON mal escrito | `400 Bad Request` |
-| Nombre vacío, precio menor o igual a 0 o stock negativo | `400 Bad Request` |
-| Método que no corresponde (ej. `DELETE`) | `405 Method Not Allowed` |
-| Cualquier otro error inesperado | `500 Internal Server Error` |
-
-**En el cliente** (`cliente.py`):
-
-- Si el servidor contesta con un error, muestra el código y el mensaje que vino
-  en el JSON.
-- Si el servidor está apagado, avisa que no se pudo conectar y el menú sigue
-  andando.
-- Si el usuario pone letras en el precio o el stock, avisa sin llamar al
-  servidor.
+El cliente pasa los datos a JSON y los manda. El servidor los lee, contesta
+con otro JSON y el cliente lo muestra en pantalla.
 
 ---
 
 ## Cómo compilar y ejecutar
 
-**Requisitos:** Java 21, Maven y Python 3.
-
-**Terminal A — servidor** (desde la carpeta `TP7/servidor`):
+**Terminal A — servidor** (en la carpeta `TP7/servidor`):
 
 ```bash
 mvn package
 java -jar target/servidor-1.0.jar
 ```
 
-La primera vez Maven descarga Spring Boot, así que tarda un poco. El servidor
-queda escuchando en `http://localhost:8080`. Se corta con `Ctrl+C`.
-
-**Terminal B — cliente** (desde la carpeta `TP7/cliente`):
+**Terminal B — cliente** (en la carpeta `TP7/cliente`):
 
 ```bash
 python cliente.py                  # servidor en esta misma compu
 python cliente.py 192.168.0.142    # servidor en otra compu de la red
 ```
 
-También se puede probar la API sin el cliente, con `curl` o desde el navegador
-entrando a `http://localhost:8080/productos`.
+---
+
+## Errores
+
+| Caso | Respuesta |
+|---|---|
+| El producto no existe | `404` |
+| Id con letras, JSON mal escrito o datos inválidos | `400` |
+| Un error inesperado en el servidor | `500` |
+| El servidor está apagado | El cliente avisa y sigue andando |
 
 ---
 
 ## Capturas
 
-### Captura 1 — Invocación exitosa
+### 1. Pedido exitoso
 
-El cliente lista los productos, agrega uno nuevo (`POST`, responde `201`) y lo
-busca por id. En cada pedido se ve lo que se manda (`>>>`), lo que vuelve
-(`<<<`) y abajo los datos ya convertidos y mostrados en forma de tabla.
+El cliente lista los productos, agrega uno y lo busca. Se ve lo que manda
+(`>>>`) y lo que vuelve (`<<<`).
 
-![Invocación exitosa](capturas/01-invocacion-exitosa.png)
+![Pedido exitoso](capturas/01-invocacion-exitosa.png)
 
-### Captura 2 — Estructura de los datos (JSON)
+### 2. El JSON que llega
 
-En la consola del servidor se ve el **JSON tal cual llega** en cada `POST`, y
-qué pasa con cada pedido:
+En el servidor se ve cada JSON que recibe:
 
 ![JSON en el servidor](capturas/02-json-en-el-servidor.png)
 
-Con `curl -i` se ve el mensaje HTTP completo que viaja por la red: el código
-(`201`, `200`), el encabezado `Content-Type: application/json` y el cuerpo en
-JSON:
+Y con `curl -i` se ve la respuesta completa que viaja por la red:
 
 ![JSON en la red](capturas/02-json-en-la-red.png)
 
-### Captura 3 — Manejo de errores
+### 3. Errores
 
-Producto que no existe (`404`), id con letras (`400`), nombre vacío (`400`),
-precio negativo (`400`) y stock con letras (lo frena el cliente):
+Producto que no existe, id con letras, nombre vacío, precio negativo y stock
+con letras:
 
-![Errores desde el cliente](capturas/03-errores-cliente.png)
+![Errores](capturas/03-errores-cliente.png)
 
-JSON mal escrito mandado con `curl` (`400`):
+JSON mal escrito:
 
 ![JSON mal formado](capturas/03-json-mal-formado.png)
 
-Cliente con el servidor apagado: avisa y no se cierra.
+Servidor apagado:
 
 ![Servidor apagado](capturas/03-servidor-apagado.png)
 
