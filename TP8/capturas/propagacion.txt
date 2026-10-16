@@ -1,0 +1,19 @@
+=== Prueba de propagacion ===
+Escrituras -> principal (puerto 5432)
+Lecturas   -> replica   (puerto 5433)
+
+INSERT id=1 (Ana) en el principal -> visto en la replica a los 14,8 ms (1 consultas)
+INSERT id=2 (Bruno) en el principal -> visto en la replica a los 15,5 ms (1 consultas)
+INSERT id=3 (Carla) en el principal -> visto en la replica a los 66,2 ms (2 consultas)
+INSERT id=4 (Diego) en el principal -> visto en la replica a los 17,6 ms (2 consultas)
+INSERT id=5 (Elena) en el principal -> visto en la replica a los 11,5 ms (4 consultas)
+
+SELECT en la replica:
+  1 - Ana
+  2 - Bruno
+  3 - Carla
+  4 - Diego
+  5 - Elena
+
+Intento de INSERT directo en la replica:
+  Rechazado: ERROR: cannot execute INSERT in a read-only transaction

@@ -1,0 +1,33 @@
+services:
+  principal:
+    image: postgres:16
+    container_name: postgres-principal
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: tp8
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/1-init.sql
+      - ./replicacion.sh:/docker-entrypoint-initdb.d/2-replicacion.sh
+
+  replica:
+    image: postgres:16
+    container_name: postgres-replica
+    user: postgres
+    environment:
+      PGPASSWORD: replica123
+    ports:
+      - "5433:5432"
+    depends_on:
+      - principal
+    command: >
+      bash -c "
+      if [ ! -s /var/lib/postgresql/data/PG_VERSION ]; then
+        until pg_basebackup -h principal -U replicador -D /var/lib/postgresql/data -R -X stream; do
+          echo 'Esperando al principal...'; sleep 2;
+        done;
+        chmod 700 /var/lib/postgresql/data;
+      fi;
+      exec postgres"

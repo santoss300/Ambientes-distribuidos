@@ -1,0 +1,7 @@
+CREATE TABLE alumnos (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL,
+    creado TIMESTAMP DEFAULT NOW()
+);
+
+CREATE ROLE replicador WITH REPLICATION LOGIN PASSWORD 'replica123';

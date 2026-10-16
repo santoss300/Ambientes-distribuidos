@@ -1,0 +1,49 @@
+=== Prueba de caida del principal ===
+21:02:52  ESCRITURA ok en principal (id=6)
+21:02:52  LECTURA en replica: 6 alumnos
+21:02:55  ESCRITURA ok en principal (id=7)
+21:02:55  LECTURA en replica: 7 alumnos
+21:02:57  ESCRITURA ok en principal (id=8)
+21:02:57  LECTURA en replica: 8 alumnos
+21:02:59  ESCRITURA fallo en principal: Connection to localhost:5432 refused
+21:02:59  -> La replica sigue siendo de solo lectura
+21:02:59  LECTURA en replica: 8 alumnos
+21:03:01  ESCRITURA fallo en principal: Connection to localhost:5432 refused
+21:03:01  -> La replica sigue siendo de solo lectura
+21:03:01  LECTURA en replica: 8 alumnos
+21:03:04  ESCRITURA fallo en principal: Connection to localhost:5432 refused
+21:03:04  -> La replica sigue siendo de solo lectura
+21:03:04  LECTURA en replica: 8 alumnos
+21:03:06  ESCRITURA fallo en principal: Connection to localhost:5432 refused
+21:03:06  -> La replica sigue siendo de solo lectura
+21:03:06  LECTURA en replica: 8 alumnos
+21:03:08  ESCRITURA fallo en principal: Connection to localhost:5432 refused
+21:03:08  -> La replica sigue siendo de solo lectura
+21:03:08  LECTURA en replica: 8 alumnos
+21:03:10  ESCRITURA fallo en principal: Connection to localhost:5432 refused
+21:03:10  -> La replica sigue siendo de solo lectura
+21:03:10  LECTURA en replica: 8 alumnos
+21:03:12  ESCRITURA fallo en principal: Connection to localhost:5432 refused
+21:03:12  -> La replica sigue siendo de solo lectura
+21:03:12  LECTURA en replica: 8 alumnos
+21:03:15  ESCRITURA fallo en principal: Connection to localhost:5432 refused
+21:03:15  -> La replica acepta escrituras, ahora es el principal (id=34)
+21:03:15  LECTURA en replica: 9 alumnos
+21:03:17  ESCRITURA ok en replica (id=35)
+21:03:17  LECTURA en replica: 10 alumnos
+21:03:19  ESCRITURA ok en replica (id=36)
+21:03:19  LECTURA en replica: 11 alumnos
+21:03:21  ESCRITURA ok en replica (id=37)
+21:03:21  LECTURA en replica: 12 alumnos
+21:03:23  ESCRITURA ok en replica (id=38)
+21:03:23  LECTURA en replica: 13 alumnos
+21:03:25  ESCRITURA ok en replica (id=39)
+21:03:25  LECTURA en replica: 14 alumnos
+21:03:27  ESCRITURA ok en replica (id=40)
+21:03:27  LECTURA en replica: 15 alumnos
+21:03:29  ESCRITURA ok en replica (id=41)
+21:03:29  LECTURA en replica: 16 alumnos
+21:03:31  ESCRITURA ok en replica (id=42)
+21:03:31  LECTURA en replica: 17 alumnos
+21:03:33  ESCRITURA ok en replica (id=43)
+21:03:33  LECTURA en replica: 18 alumnos

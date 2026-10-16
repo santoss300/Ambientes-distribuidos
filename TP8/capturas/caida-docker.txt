@@ -1,0 +1,9 @@
+$ docker stop postgres-principal
+postgres-principal
+
+$ docker exec postgres-replica psql -U postgres -c "SELECT pg_promote()"
+ pg_promote 
+------------
+ t
+(1 row)
+
