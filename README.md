@@ -14,6 +14,7 @@
 | **TP6** | Servidor de procesamiento con Java RMI | [TP6/](TP6/) |
 | **TP7** | API REST de productos (Spring Boot) y cliente en Python | [TP7/](TP7/) |
 | **TP8** | Base de datos replicada con PostgreSQL y backend en Java | [TP8/](TP8/) |
+| **TP9** | Seguridad con JWT y HTTPS (Spring Boot) y cliente en Python | [TP9/](TP9/) |
 
 ---
 
@@ -31,6 +32,7 @@
 ├── TP6/            TP6 completo (código, capturas y README)
 ├── TP7/            TP7 completo (servidor, cliente, capturas y README)
 ├── TP8/            TP8 completo (docker-compose, backend, capturas y README)
+├── TP9/            TP9 completo (servidor HTTPS, cliente, capturas y README)
 └── README.md       Este archivo
 ```
 

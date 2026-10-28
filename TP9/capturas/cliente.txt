@@ -1,0 +1,73 @@
+=== 1. Login y emision del token ===
+
+>>> POST https://localhost:8443/login
+>>> JSON enviado: {"usuario": "ana", "clave": "1234"}
+    (canal cifrado con TLSv1.3)
+<<< 200 OK
+<<< {"token":"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhbmEiLCJyb2wiOiJhZG1pbiIsImlhdCI6MTc5MzIwMTIyMywiZXhwIjoxNzkzMjAxODIzfQ._zRBOXp9ZiaCy8ErJrnEkyRzqhXXuE2xp6sLH0b5IiE"}
+    Payload del token: {"sub": "ana", "rol": "admin", "iat": 1793201223, "exp": 1793201823}
+    Vence: 28/10/2026 12:37:03
+
+=== 2. Acceso con token por HTTPS ===
+
+>>> GET https://localhost:8443/datos
+>>> Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiO...
+    (canal cifrado con TLSv1.3)
+<<< 200 OK
+<<< {"rol":"admin","mensaje":"Hola ana, estos son datos protegidos"}
+
+>>> GET https://localhost:8443/admin
+>>> Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiO...
+    (canal cifrado con TLSv1.3)
+<<< 200 OK
+<<< {"mensaje":"Bienvenido al panel de administracion, ana"}
+
+=== 3. Rechazos ===
+
+>>> GET https://localhost:8443/datos
+    (canal cifrado con TLSv1.3)
+<<< 401 Unauthorized
+<<< {"error":"Falta el token"}
+
+>>> GET https://localhost:8443/datos
+>>> Authorization: Bearer esto.no.es-un-token...
+    (canal cifrado con TLSv1.3)
+<<< 401 Unauthorized
+<<< {"error":"Token invalido"}
+
+>>> POST https://localhost:8443/login
+>>> JSON enviado: {"usuario": "ana", "clave": "mal"}
+    (canal cifrado con TLSv1.3)
+<<< 401 Unauthorized
+<<< {"error":"Usuario o clave incorrectos"}
+
+>>> POST https://localhost:8443/login
+>>> JSON enviado: {"usuario": "beto", "clave": "abcd"}
+    (canal cifrado con TLSv1.3)
+<<< 200 OK
+<<< {"token":"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJiZXRvIiwicm9sIjoidXN1YXJpbyIsImlhdCI6MTc5MzIwMTIyNiwiZXhwIjoxNzkzMjAxODI2fQ.JcQtlcJJtXvrK-8BDlTMCZbTY8BMxD9OTIBBVq-oeY0"}
+
+>>> GET https://localhost:8443/admin
+>>> Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiO...
+    (canal cifrado con TLSv1.3)
+<<< 403 Forbidden
+<<< {"error":"El rol usuario no tiene permiso para esta ruta"}
+
+=== 4. Tampering: se cambia el rol sin volver a firmar ===
+
+>>> POST https://localhost:8443/login
+>>> JSON enviado: {"usuario": "beto", "clave": "abcd"}
+    (canal cifrado con TLSv1.3)
+<<< 200 OK
+<<< {"token":"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJiZXRvIiwicm9sIjoidXN1YXJpbyIsImlhdCI6MTc5MzIwMTIyNiwiZXhwIjoxNzkzMjAxODI2fQ.JcQtlcJJtXvrK-8BDlTMCZbTY8BMxD9OTIBBVq-oeY0"}
+
+    Original: {"sub": "beto", "rol": "usuario", "iat": 1793201226, "exp": 1793201826}
+    Alterado: {"sub": "beto", "rol": "admin", "iat": 1793201226, "exp": 1793201826}
+    La firma se deja igual. Token alterado:
+    eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJiZXRvIiwicm9sIjoiYWRtaW4iLCJpYXQiOjE3OTMyMDEyMjYsImV4cCI6MTc5MzIwMTgyNn0.JcQtlcJJtXvrK-8BDlTMCZbTY8BMxD9OTIBBVq-oeY0
+
+>>> GET https://localhost:8443/admin
+>>> Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiO...
+    (canal cifrado con TLSv1.3)
+<<< 401 Unauthorized
+<<< {"error":"La firma no coincide, el token fue alterado"}

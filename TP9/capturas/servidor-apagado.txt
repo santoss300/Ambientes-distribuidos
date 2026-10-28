@@ -1,0 +1,6 @@
+$ python cliente/cliente.py   (con el servidor apagado)
+=== 1. Login y emision del token ===
+
+>>> POST https://localhost:8443/login
+>>> JSON enviado: {"usuario": "ana", "clave": "1234"}
+ERROR: no se pudo conectar con el servidor en localhost:8443

@@ -1,0 +1,24 @@
+$ python cliente/cliente.py vencido   (servidor con --jwt.segundos=5)
+=== Token vencido ===
+
+>>> POST https://localhost:8443/login
+>>> JSON enviado: {"usuario": "ana", "clave": "1234"}
+    (canal cifrado con TLSv1.3)
+<<< 200 OK
+<<< {"token":"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhbmEiLCJyb2wiOiJhZG1pbiIsImlhdCI6MTc5MzIwMTEzNiwiZXhwIjoxNzkzMjAxMTQxfQ.49KFiuOtRZTwcbrNn-6zmy9Ae_1tsF6bKvTgoKzu9Z8"}
+    Payload del token: {"sub": "ana", "rol": "admin", "iat": 1793201136, "exp": 1793201141}
+    Vence: 28/10/2026 12:25:41
+
+>>> GET https://localhost:8443/datos
+>>> Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiO...
+    (canal cifrado con TLSv1.3)
+<<< 200 OK
+<<< {"rol":"admin","mensaje":"Hola ana, estos son datos protegidos"}
+
+    Esperando 6 segundos a que venza...
+
+>>> GET https://localhost:8443/datos
+>>> Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiO...
+    (canal cifrado con TLSv1.3)
+<<< 401 Unauthorized
+<<< {"error":"El token esta vencido"}

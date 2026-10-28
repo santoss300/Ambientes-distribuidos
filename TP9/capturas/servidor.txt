@@ -1,0 +1,11 @@
+Servidor HTTPS escuchando en https://localhost:8443
+OK  POST /login: token emitido para ana (admin)
+OK  GET /datos (ana, admin)
+OK  GET /admin (ana, admin)
+401 GET /datos: Falta el token
+401 GET /datos: Token invalido
+401 POST /login: usuario o clave incorrectos (ana)
+OK  POST /login: token emitido para beto (usuario)
+403 GET /admin: El rol usuario no tiene permiso para esta ruta
+OK  POST /login: token emitido para beto (usuario)
+401 GET /admin: La firma no coincide, el token fue alterado
