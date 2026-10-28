@@ -4,22 +4,22 @@ Trabajo Práctico N° 9 — Desarrollo de Aplicaciones para Ambientes Distribuid
 (Lic. Gabriel Artaza).
 
 **Alumno:** Ignacio Ruiz — DNI 39.040.338
-**Servidor:** Java 21 + Spring Boot + jjwt · **Cliente:** Python (sin librerías extra)
-**Certificado:** autofirmado, generado con `keytool` (viene con Java)
+**Servidor:** Java + Spring Boot · **Cliente:** Python
+**Herramientas:** jjwt (para los tokens) y keytool (para el certificado)
 
-Un servidor que solo atiende por **HTTPS**. Para entrar hay que hacer login y
-el servidor devuelve un **token JWT** firmado. Con ese token se pueden pedir
-las rutas protegidas.
+Un servidor que solo atiende por **HTTPS** (conexión cifrada). Para usarlo hay
+que hacer login: el servidor devuelve un **token**, y con ese token se puede
+entrar a las rutas protegidas.
 
 | Ruta | Quién puede entrar |
 |---|---|
-| `POST /login` | Cualquiera (recibe usuario y clave, devuelve el token) |
-| `GET /datos` | Cualquiera con un token válido |
-| `GET /admin` | Solo con un token de rol `admin` |
+| `POST /login` | Cualquiera, con usuario y clave |
+| `GET /datos` | Cualquiera que tenga token |
+| `GET /admin` | Solo con token de rol `admin` |
 
-Usuarios de prueba: `ana` / `1234` (rol `admin`) y `beto` / `abcd` (rol `usuario`).
+Usuarios: `ana` / `1234` (admin) y `beto` / `abcd` (usuario).
 
-> La consigna dice carpeta `/TP8`, pero como `TP8/` ya es el trabajo anterior,
+> La consigna dice carpeta `/TP8`, pero como esa ya es del trabajo anterior,
 > este va en `TP9/`.
 
 ---
@@ -28,20 +28,16 @@ Usuarios de prueba: `ana` / `1234` (rol `admin`) y `beto` / `abcd` (rol `usuario
 
 ```
 TP9/
-├── servidor/
-│   └── src/main/
-│       ├── java/tp9/
-│       │   ├── Servidor.java           Arranca el servidor
-│       │   ├── Jwt.java                Crea y valida los tokens
-│       │   ├── FiltroJwt.java          Revisa el token antes de cada ruta protegida
-│       │   ├── LoginController.java    POST /login
-│       │   └── RecursoController.java  GET /datos y GET /admin
-│       └── resources/
-│           ├── application.properties  Puerto 8443, HTTPS y duración del token
-│           └── keystore.p12            Certificado y clave del servidor
+├── servidor/     El servidor (Spring Boot)
+│   └── src/main/java/tp9/
+│       ├── Servidor.java            Arranca el servidor
+│       ├── Jwt.java                 Crea y revisa los tokens
+│       ├── FiltroJwt.java           Controla el token antes de cada ruta
+│       ├── LoginController.java     El login
+│       └── RecursoController.java   Las rutas /datos y /admin
 ├── cliente/
 │   ├── cliente.py        Hace todas las pruebas
-│   └── certificado.pem   Certificado público, para que el cliente confíe en el servidor
+│   └── certificado.pem   Certificado del servidor
 ├── capturas/
 └── README.md
 ```
@@ -51,28 +47,19 @@ TP9/
 ## Cómo funciona
 
 ```mermaid
-sequenceDiagram
-    participant C as Cliente (Python)
-    participant S as Servidor (Java, HTTPS 8443)
-    C->>S: POST /login {usuario, clave}
-    S-->>C: 200 {token}
-    C->>S: GET /datos + Authorization: Bearer token
-    S->>S: FiltroJwt revisa firma, vencimiento y rol
-    S-->>C: 200 / 401 / 403
+flowchart LR
+    C["Cliente<br/>(Python)"] -- "1. usuario y clave" --> S["Servidor<br/>(Java, HTTPS)"]
+    S -- "2. token" --> C
+    C -- "3. pedido + token" --> S
 ```
 
-- Todo viaja cifrado con **TLS**. El cliente comprueba que el certificado del
-  servidor sea el de `certificado.pem`; si no, no se conecta.
-- El token tiene tres partes: cabecera, **payload** (`sub`, `rol`, `iat`,
-  `exp`) y **firma**. La firma se hace con una clave secreta que solo conoce el
-  servidor, así que si alguien cambia el payload la firma deja de coincidir.
-- El token dura 10 minutos (`jwt.segundos=600`).
-
-| Caso | Respuesta |
-|---|---|
-| Sin token, token roto o vencido, o firma que no coincide | `401` |
-| Token válido pero sin el rol necesario | `403` |
-| Usuario o clave incorrectos en `/login` | `401` |
+- Todo viaja **cifrado**. El cliente revisa que el servidor tenga el
+  certificado correcto antes de mandar nada.
+- El token lleva adentro el usuario, el rol y cuándo vence (dura 10 minutos).
+  Además lleva una **firma** que solo el servidor sabe hacer: si alguien cambia
+  algo del token, la firma ya no coincide y el servidor lo rechaza.
+- Si el token falta, está mal o venció, el servidor responde **401**. Si el
+  token está bien pero el rol no alcanza, responde **403**.
 
 ---
 
@@ -93,69 +80,55 @@ java -jar target/servidor-1.0.jar
 python cliente/cliente.py
 ```
 
-**Prueba del token vencido:** se levanta el servidor con tokens de 5 segundos y
-se corre el cliente en modo `vencido`:
+**Para probar un token vencido**, se arranca el servidor con tokens que duran
+5 segundos:
 
 ```bash
 java -jar target/servidor-1.0.jar --jwt.segundos=5
 python cliente/cliente.py vencido
 ```
 
-**Si se quiere generar otro certificado** (en la carpeta `TP9`):
-
-```bash
-keytool -genkeypair -alias tp9 -keyalg RSA -keysize 2048 -validity 365 -storetype PKCS12 -keystore servidor/src/main/resources/keystore.p12 -storepass tp9clave -dname "CN=localhost" -ext "SAN=dns:localhost,ip:127.0.0.1"
-keytool -exportcert -rfc -alias tp9 -keystore servidor/src/main/resources/keystore.p12 -storepass tp9clave -file cliente/certificado.pem
-```
-
-> El certificado y las claves están en el repo solo porque es un trabajo
-> práctico. En un sistema real no se suben.
+> El certificado es autofirmado y está en el repo solo porque es un TP.
 
 ---
 
 ## Capturas
 
-### 1. Emisión del JWT
+### 1. Login
 
-Login de `ana`. El servidor contesta con el token en JSON. Abajo se ve el
-payload: `sub`, `rol` y `exp` (vencimiento).
+`ana` hace login y recibe el token. Abajo se ve lo que tiene adentro: usuario,
+rol y vencimiento.
 
 ![Login](capturas/01-login.png)
 
-### 2. Acceso autorizado por HTTPS
+### 2. Entrar con el token por HTTPS
 
-Con el token en el encabezado `Authorization` se entra a `/datos` y a `/admin`
-(`200 OK`). Cada pedido muestra que el canal va cifrado con TLS 1.3. Al final,
-si se intenta entrar por `http://` sin cifrar, el servidor no lo acepta.
+Con el token se entra a `/datos` y `/admin` (`200 OK`). Cada pedido muestra que
+va cifrado. Al final se ve que por `http://` sin cifrar el servidor no atiende.
 
 ![Acceso por HTTPS](capturas/02-acceso-https.png)
 
-### 3. Rechazos: sin token, token inválido, vencido y sin permiso
+### 3. Rechazos
 
-- Sin token → `401`
-- Token inventado → `401`
-- Clave incorrecta → `401`
-- `beto` (rol `usuario`) quiere entrar a `/admin` → `403`
-- Token vencido (servidor con tokens de 5 segundos) → primero `200` y después
-  de 6 segundos `401`
+Sin token, token inventado y clave mala dan `401`. `beto` no puede entrar a
+`/admin` (`403`). Y el token vencido: primero anda y a los 6 segundos da `401`.
 
 ![Rechazos](capturas/03-rechazos.png)
 
-### 4. Tampering
+### 4. Token modificado
 
-Se toma el token de `beto`, se cambia `"rol": "usuario"` por `"rol": "admin"`
-en el payload y se deja la firma original. El servidor se da cuenta de que la
-firma no coincide y lo rechaza con `401`.
+Se agarra el token de `beto`, se le cambia el rol a `admin` y se deja la firma
+como estaba. El servidor se da cuenta y lo rechaza.
 
 ![Tampering](capturas/04-tampering.png)
 
-### Extra: log del servidor y servidor apagado
+### Extra
 
-El servidor muestra cada pedido y por qué lo aceptó o lo rechazó:
+Lo que muestra el servidor:
 
 ![Servidor](capturas/05-servidor.png)
 
-Si el servidor está apagado, el cliente avisa en vez de cortarse con un error:
+Servidor apagado (el cliente avisa y no se cuelga):
 
 ![Servidor apagado](capturas/06-servidor-apagado.png)
 
